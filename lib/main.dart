@@ -36,6 +36,10 @@ Future<void> main() async {
   try {
     await initNotifications();
     await requestNotificationPermission();
+  } catch (_) {
+    // A denied or unavailable permission must not block launch or scheduling.
+  }
+  try {
     await Workmanager().initialize(callbackDispatcher);
     if (prefs.notifyUpdates) await scheduleUpdateCheck();
   } catch (_) {

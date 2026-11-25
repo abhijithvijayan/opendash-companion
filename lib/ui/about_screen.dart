@@ -204,6 +204,7 @@ class _NotifyToggleState extends ConsumerState<_NotifyToggle> {
       value: prefs.notifyUpdates,
       onChanged: (v) async {
         await prefs.setNotifyUpdates(v);
+        if (!mounted) return;
         setState(() {});
         try {
           await (v ? scheduleUpdateCheck() : cancelUpdateCheck());
