@@ -70,6 +70,28 @@ void main() {
     expect(steps.every((s) => s.state == StepState.done), isTrue);
   });
 
+  test('uninstall restores the prior mode as the last step', () async {
+    final adb = FakeAdb(answers: {'pm uninstall': 'Success', 'cmd package set-home-activity': 'Success'});
+    final steps = await finish(uninstallOps(adb, host: 'h', priorMode: 'cust'));
+    expect(adb.log.last, 'setScooterMode h cust');
+    expect(steps.last.id, 'mode');
+    expect(steps.every((s) => s.state == StepState.done), isTrue);
+  });
+
+  test('uninstall skips the mode restore when there is no prior or it is mfg', () async {
+    for (final mode in [null, 'mfg']) {
+      final adb = FakeAdb(answers: {'pm uninstall': 'Success', 'cmd package set-home-activity': 'Success'});
+      await finish(uninstallOps(adb, host: 'h', priorMode: mode));
+      expect(adb.log.any((l) => l.startsWith('setScooterMode')), isFalse);
+    }
+  });
+
+  test('a dropped link while restoring the mode does not fail the uninstall', () async {
+    final adb = FakeAdb(answers: {'pm uninstall': 'Success', 'cmd package set-home-activity': 'Success'})..setModeError = const AdbFailure('lost');
+    final steps = await finish(uninstallOps(adb, host: 'h', priorMode: 'cust'));
+    expect(steps.every((s) => s.state == StepState.done), isTrue);
+  });
+
   test('pm uninstall without Success fails', () async {
     final adb = FakeAdb(answers: {'pm uninstall': 'Failure [DELETE_FAILED_INTERNAL_ERROR]', 'cmd package set-home-activity': 'Success'});
     final steps = await finish(uninstallOps(adb));

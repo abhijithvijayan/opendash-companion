@@ -13,6 +13,7 @@ class FakeAdb implements Adb {
   ProvisionOutcome provisionOutcome = ProvisionOutcome.ok;
   String? provisionDetail;
   int provisionCalls = 0;
+  Object? setModeError;
 
   @override
   Future<ConnectOutcome> connect(String host) async => ConnectOutcome.ok;
@@ -26,6 +27,7 @@ class FakeAdb implements Adb {
   @override
   Future<ProvisionOutcome> setScooterMode(String host, String mode) async {
     log.add('setScooterMode $host $mode');
+    if (setModeError != null) throw setModeError!;
     return ProvisionOutcome.ok;
   }
 

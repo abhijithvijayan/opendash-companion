@@ -17,9 +17,10 @@ final hostApiProvider = Provider<AdbHostApi>((ref) => AdbHostApi());
 const _uninstallNote = 'OpenDash turned off the stock dashboard\'s update auto-download. Use OpenDash\'s '
     '"Restore stock update settings" first, or turn it on later in the stock dashboard.';
 
-void _run(BuildContext context, WidgetRef ref, Operation op) {
-  ref.read(operationProvider.notifier).start(op);
+Future<void> _run(BuildContext context, WidgetRef ref, Operation op) {
+  final done = ref.read(operationProvider.notifier).start(op);
   Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProgressScreen()));
+  return done;
 }
 
 Future<void> installFromGitHub(BuildContext context, WidgetRef ref, Release r, {required bool update}) async {
@@ -91,7 +92,11 @@ Future<void> uninstallOpenDash(BuildContext context, WidgetRef ref) async {
       confirm: 'Uninstall',
       danger: true);
   if (!ok || !context.mounted) return;
-  _run(context, ref, uninstallOps(ref.read(adbProvider)));
+  final prefs = ref.read(prefsProvider);
+  final host = ref.read(connectionProvider).host;
+  final prior = host == null ? null : prefs.priorScooterMode(host);
+  await _run(context, ref, uninstallOps(ref.read(adbProvider), host: host, priorMode: prior));
+  if (host != null && prior != null) await prefs.clearPriorScooterMode(host);
 }
 
 Future<void> uninstallOther(BuildContext context, WidgetRef ref, String pkg) async {

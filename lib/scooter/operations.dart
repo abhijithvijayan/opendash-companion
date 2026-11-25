@@ -138,7 +138,15 @@ StepAction _pmUninstall(Adb adb, String pkg) => (step, changed) async {
       if (!r.output.contains('Success')) throw StepError(_firstLine(r.output).isEmpty ? 'Uninstall failed.' : _firstLine(r.output));
     };
 
-Operation uninstallOps(Adb adb) => Operation('Removing OpenDash', [
+/// Restoring `cust` closes the scooter's ports, so a dropped link after the
+/// call is expected: any error here counts as success.
+StepAction _restoreMode(Adb adb, String host, String mode) => (step, changed) async {
+      try {
+        await adb.setScooterMode(host, mode);
+      } catch (_) {}
+    };
+
+Operation uninstallOps(Adb adb, {String? host, String? priorMode}) => Operation('Removing OpenDash', [
       (
         OpStep('home', 'Give the home screen back to the stock dashboard'),
         _soft(adb, 'cmd package set-home-activity $kStockActivity',
@@ -147,6 +155,8 @@ Operation uninstallOps(Adb adb) => Operation('Removing OpenDash', [
       (OpStep('stock', 'Start the stock dashboard'), _soft(adb, 'am start -W -n $kStockActivity', "Couldn't start the stock dashboard; it starts on the next boot.")),
       (OpStep('uninstall', 'Uninstall OpenDash'), _pmUninstall(adb, kOpenDashPackage)),
       (OpStep('density', 'Reset the display density'), shellStep(adb, 'wm density reset')),
+      if (host != null && priorMode != null && priorMode != 'mfg')
+        (OpStep('mode', "Restore the scooter's previous mode"), _restoreMode(adb, host, priorMode)),
     ]);
 
 Operation uninstallOtherOps(Adb adb, String pkg) {
