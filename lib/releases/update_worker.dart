@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 
 import '../state/prefs.dart';
-import '../state/providers.dart';
+import '../scooter/ids.dart';
 import 'notify.dart';
 import 'release.dart';
 
@@ -29,6 +29,9 @@ Future<bool> runUpdateCheck({
       await notify('OpenDash ${odNotice.version} is available', 'Open the companion to update your scooter.');
       await prefs.setLastNotifiedOpenDash(odNotice.build);
     }
+
+    // A dev build (build 0) never offers itself an update.
+    if (kCompanionBuild == 0) return true;
 
     final co = await fetchLatest(client, repo: kCompanionRepo, jsonAsset: 'companion-release.json');
     final coNotice = decideNotice(

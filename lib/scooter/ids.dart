@@ -1,3 +1,10 @@
+const kOpenDashRepo = 'abhijithvijayan/opendash';
+const kCompanionRepo = 'abhijithvijayan/opendash-companion';
+
+/// Set by scripts/release.sh. 0 on a dev build, which never offers itself an update.
+const kCompanionBuild = int.fromEnvironment('COMPANION_BUILD');
+const kCompanionVersion = String.fromEnvironment('COMPANION_VERSION');
+
 const kOpenDashPackage = 'in.abhijithvijayan.opendash';
 const kOpenDashActivity = 'in.abhijithvijayan.opendash/.MainActivity';
 const kStockPackage = 'com.olaelectric.hmiclient';

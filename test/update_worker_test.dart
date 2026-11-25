@@ -7,8 +7,13 @@ import 'package:opendash_companion/releases/update_worker.dart';
 import 'package:opendash_companion/state/prefs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-MockClient _client({int build = 2041}) => MockClient((req) async {
+MockClient _client({int build = 2041, List<String>? seen}) => MockClient((req) async {
       final u = req.url.toString();
+      seen?.add(u);
+      return _handle(u, build);
+    });
+
+Future<http.Response> _handle(String u, int build) async {
       if (u == 'https://api.github.com/repos/abhijithvijayan/opendash/releases/latest') {
         return http.Response(
             jsonEncode({
@@ -23,7 +28,7 @@ MockClient _client({int build = 2041}) => MockClient((req) async {
         return http.Response(jsonEncode({'version': '0.2.1', 'build': build, 'apk': 'o.apk', 'sha256': 'ab'}), 200);
       }
       return http.Response('nope', 404);
-    });
+}
 
 Future<Prefs> _prefs({bool notify = true}) async {
   SharedPreferences.setMockInitialValues({});
@@ -55,6 +60,23 @@ void main() {
     final prefs = await _prefs();
     final sent = <String>[];
     await runUpdateCheck(prefs: prefs, client: _client(build: 2000), notify: (t, b) async => sent.add(t));
+    expect(sent, isEmpty);
+  });
+
+  test('dev build (kCompanionBuild==0) skips the companion channel entirely', () async {
+    final prefs = await _prefs();
+    final seen = <String>[];
+    final sent = <String>[];
+    await runUpdateCheck(prefs: prefs, client: _client(seen: seen), notify: (t, b) async => sent.add(t));
+    expect(seen.any((u) => u.contains('opendash-companion')), isFalse);
+    expect(sent.any((t) => t.contains('Companion')), isFalse);
+  });
+
+  test('a failed OpenDash fetch notifies nothing and still returns true', () async {
+    final prefs = await _prefs();
+    final sent = <String>[];
+    final client = MockClient((_) async => http.Response('nope', 404));
+    expect(await runUpdateCheck(prefs: prefs, client: client, notify: (t, b) async => sent.add(t)), isTrue);
     expect(sent, isEmpty);
   });
 }

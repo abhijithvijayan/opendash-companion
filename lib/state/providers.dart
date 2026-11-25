@@ -9,14 +9,11 @@ import '../flows.dart';
 import '../releases/release.dart';
 import '../scooter/operations.dart';
 import '../report/app_log.dart';
+import '../scooter/ids.dart';
 import 'prefs.dart';
 
-const kOpenDashRepo = 'abhijithvijayan/opendash';
-const kCompanionRepo = 'abhijithvijayan/opendash-companion';
+export '../scooter/ids.dart' show kOpenDashRepo, kCompanionRepo, kCompanionBuild, kCompanionVersion;
 
-/// Set by scripts/release.sh. 0 on a dev build, which never offers itself an update.
-const kCompanionBuild = int.fromEnvironment('COMPANION_BUILD');
-const kCompanionVersion = String.fromEnvironment('COMPANION_VERSION');
 const kCompanionCertSha256 = String.fromEnvironment('COMPANION_CERT_SHA256');
 
 final prefsProvider = Provider<Prefs>((ref) => throw UnimplementedError('overridden in main'));
