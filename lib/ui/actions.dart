@@ -80,10 +80,10 @@ Future<void> installFromFile(BuildContext context, WidgetRef ref) async {
   _run(context, ref, installOps(ref.read(adbProvider), path, makeHome: ref.read(prefsProvider).makeHome));
 }
 
-Future<void> launchOpenDash(BuildContext context, WidgetRef ref) async {
+Future<void> launchOpenDash(BuildContext context, WidgetRef ref, {required bool viaHome}) async {
   final ok = await confirm(context, title: 'Start OpenDash?', body: kParkedWarning, confirm: 'Start');
   if (!ok || !context.mounted) return;
-  _run(context, ref, launchOps(ref.read(adbProvider)));
+  _run(context, ref, launchOps(ref.read(adbProvider), viaHome: viaHome));
 }
 
 /// Keep the stored prior mode unless the whole uninstall succeeded, so a retry can still restore it.

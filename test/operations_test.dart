@@ -16,8 +16,9 @@ void main() {
       'am force-stop in.abhijithvijayan.opendash',
       'install /c/o.apk -r -g',
       'cmd package set-home-activity in.abhijithvijayan.opendash/.MainActivity',
+      'input keyevent KEYCODE_WAKEUP',
       'am force-stop in.abhijithvijayan.opendash',
-      'am start -S -W -n in.abhijithvijayan.opendash/.MainActivity',
+      'am start -a android.intent.action.MAIN -c android.intent.category.HOME',
     ]);
     expect(steps.every((s) => s.state == StepState.done), isTrue);
   });
@@ -46,8 +47,29 @@ void main() {
 
   test('launch error output fails the step', () async {
     final adb = FakeAdb(answers: {'am start': 'Error: Activity class does not exist.'});
-    final steps = await finish(launchOps(adb));
-    expect(adb.log, ['am force-stop in.abhijithvijayan.opendash', 'am start -S -W -n in.abhijithvijayan.opendash/.MainActivity']);
+    final steps = await finish(launchOps(adb, viaHome: false));
+    expect(adb.log, [
+      'input keyevent KEYCODE_WAKEUP',
+      'am force-stop in.abhijithvijayan.opendash',
+      'am start -S -W -n in.abhijithvijayan.opendash/.MainActivity',
+    ]);
+    expect(steps.single.state, StepState.failed);
+  });
+
+  test('launch via home wakes, force-stops, then fires the HOME intent', () async {
+    final adb = FakeAdb(answers: {'am start': 'Starting: Intent { act=android.intent.action.MAIN }'});
+    final steps = await finish(launchOps(adb, viaHome: true));
+    expect(adb.log, [
+      'input keyevent KEYCODE_WAKEUP',
+      'am force-stop in.abhijithvijayan.opendash',
+      'am start -a android.intent.action.MAIN -c android.intent.category.HOME',
+    ]);
+    expect(steps.single.state, StepState.done);
+  });
+
+  test('home launch error output fails the step too', () async {
+    final adb = FakeAdb(answers: {'am start': 'Error: no home'});
+    final steps = await finish(launchOps(adb, viaHome: true));
     expect(steps.single.state, StepState.failed);
   });
 

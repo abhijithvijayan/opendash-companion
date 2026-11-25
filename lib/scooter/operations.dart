@@ -99,9 +99,14 @@ StepAction _soft(Adb adb, String cmd, String warning) => (step, changed) async {
       if (r.exitCode != 0 || r.output.contains('Error') || r.output.contains('Exception')) throw StepWarning(warning);
     };
 
-StepAction _launch(Adb adb) => (step, changed) async {
+/// Wake the display, force-stop, then relaunch. Via the HOME intent Android hands the app a fresh Surface,
+/// which clears the Kanzi white-screen halt; otherwise start the activity directly.
+StepAction _launch(Adb adb, {required bool viaHome}) => (step, changed) async {
+      await adb.shell('input keyevent KEYCODE_WAKEUP');
       await adb.shell('am force-stop $kOpenDashPackage');
-      final r = await adb.shell('am start -S -W -n $kOpenDashActivity');
+      final r = await adb.shell(viaHome
+          ? 'am start -a android.intent.action.MAIN -c android.intent.category.HOME'
+          : 'am start -S -W -n $kOpenDashActivity');
       if (r.output.contains('Error') || r.output.contains('Exception')) throw StepError(_firstLine(r.output));
     };
 
@@ -128,10 +133,11 @@ List<(OpStep, StepAction)> installSteps(Adb adb, String Function() apkPath, {req
           _soft(adb, 'cmd package set-home-activity $kOpenDashActivity',
               "Couldn't make it the home screen. Pick OpenDash when the scooter asks which home app to use.")
         ),
-      (OpStep('launch', 'Start OpenDash'), _launch(adb)),
+      (OpStep('launch', 'Start OpenDash'), _launch(adb, viaHome: makeHome)),
     ];
 
-Operation launchOps(Adb adb) => Operation('Starting OpenDash', [(OpStep('launch', 'Start OpenDash'), _launch(adb))]);
+Operation launchOps(Adb adb, {required bool viaHome}) =>
+    Operation('Starting OpenDash', [(OpStep('launch', 'Start OpenDash'), _launch(adb, viaHome: viaHome))]);
 
 StepAction _pmUninstall(Adb adb, String pkg) => (step, changed) async {
       final r = await adb.shell('pm uninstall $pkg');

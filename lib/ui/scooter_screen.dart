@@ -193,7 +193,7 @@ class _Body extends ConsumerWidget {
           ],
           if (installed) ...[
             FilledButton.icon(
-              onPressed: enabled ? () => launchOpenDash(context, ref) : null,
+              onPressed: enabled ? () => launchOpenDash(context, ref, viaHome: status.openDashIsHome) : null,
               icon: const Icon(Icons.play_arrow_rounded),
               label: const Text('Start OpenDash'),
             ),
