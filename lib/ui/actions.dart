@@ -8,6 +8,7 @@ import '../releases/release.dart';
 import '../releases/verify.dart';
 import '../scooter/ids.dart';
 import '../scooter/operations.dart';
+import '../state/prefs.dart';
 import '../state/providers.dart';
 import 'progress_screen.dart';
 import 'widgets.dart';
@@ -85,6 +86,11 @@ Future<void> launchOpenDash(BuildContext context, WidgetRef ref) async {
   _run(context, ref, launchOps(ref.read(adbProvider)));
 }
 
+/// Keep the stored prior mode unless the whole uninstall succeeded, so a retry can still restore it.
+Future<void> forgetPriorModeIfUninstalled(Operation op, Prefs prefs, String? host) async {
+  if (host != null && !op.failed) await prefs.clearPriorScooterMode(host);
+}
+
 Future<void> uninstallOpenDash(BuildContext context, WidgetRef ref) async {
   final ok = await confirm(context,
       title: 'Uninstall OpenDash?',
@@ -95,8 +101,9 @@ Future<void> uninstallOpenDash(BuildContext context, WidgetRef ref) async {
   final prefs = ref.read(prefsProvider);
   final host = ref.read(connectionProvider).host;
   final prior = host == null ? null : prefs.priorScooterMode(host);
-  await _run(context, ref, uninstallOps(ref.read(adbProvider), host: host, priorMode: prior));
-  if (host != null && prior != null) await prefs.clearPriorScooterMode(host);
+  final op = uninstallOps(ref.read(adbProvider), host: host, priorMode: prior);
+  await _run(context, ref, op);
+  await forgetPriorModeIfUninstalled(op, prefs, host);
 }
 
 Future<void> uninstallOther(BuildContext context, WidgetRef ref, String pkg) async {
