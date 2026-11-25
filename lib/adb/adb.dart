@@ -5,6 +5,8 @@ import 'adb_api.g.dart';
 
 enum ConnectOutcome { ok, unauthorized, unreachable }
 
+enum ProvisionOutcome { ok, unimplemented, unreachable, failed }
+
 /// The connection broke or was never there; [message] is for the rider.
 class AdbFailure implements Exception {
   const AdbFailure(this.message);
@@ -23,6 +25,7 @@ class InstallFailure implements Exception {
 
 abstract class Adb {
   Future<ConnectOutcome> connect(String host);
+  Future<ProvisionOutcome> provision(String host);
   Future<ShellReply> shell(String cmd);
   Future<void> install(String apkPath, List<String> options, {void Function(int sent, int total)? onProgress});
   Future<void> push(String localPath, String remotePath, {void Function(int sent, int total)? onProgress});
@@ -45,6 +48,17 @@ class PigeonAdb implements Adb, AdbEvents {
       'ok' => ConnectOutcome.ok,
       'unauthorized' => ConnectOutcome.unauthorized,
       _ => ConnectOutcome.unreachable,
+    };
+  }
+
+  @override
+  Future<ProvisionOutcome> provision(String host) async {
+    final reply = await api.provision(host);
+    return switch (reply.outcome) {
+      'ok' => ProvisionOutcome.ok,
+      'unimplemented' => ProvisionOutcome.unimplemented,
+      'unreachable' => ProvisionOutcome.unreachable,
+      _ => ProvisionOutcome.failed,
     };
   }
 

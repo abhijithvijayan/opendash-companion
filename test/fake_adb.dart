@@ -15,6 +15,9 @@ class FakeAdb implements Adb {
   Future<ConnectOutcome> connect(String host) async => ConnectOutcome.ok;
 
   @override
+  Future<ProvisionOutcome> provision(String host) async => ProvisionOutcome.ok;
+
+  @override
   Future<ShellReply> shell(String cmd) async {
     log.add(cmd);
     for (final e in answers.entries) {
