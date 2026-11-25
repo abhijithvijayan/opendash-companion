@@ -80,7 +80,7 @@
 
 ## Before You Start
 
-- **The scooter must already accept adb from this phone.** If it doesn't, the app shows this phone's adb key so you can add it the same way you set up access from a computer. How to get adb access to a scooter at all is in the OpenDash README, under [Before You Install](https://github.com/abhijithvijayan/opendash#before-you-install).
+- **The app sets up access for you, the first time.** If the scooter doesn't yet trust this phone, the app adds the phone's adb key over the scooter's own diagnostics service and sets the scooter to `mfg` mode, which opens its diagnostics ports (the documented mechanism). No laptop and no copying keys by hand. It isn't guaranteed on every scooter: on some MoveOS 4 builds the diagnostics service doesn't allow it, and the app says so. Those scooters need OpenDash side-loaded manually instead; see [Before You Install](https://github.com/abhijithvijayan/opendash#before-you-install) in the OpenDash README.
 - **Install and uninstall only while the scooter is parked.** The dashboard restarts.
 - **This may affect your warranty.** See the [disclaimer](#disclaimer).
 
