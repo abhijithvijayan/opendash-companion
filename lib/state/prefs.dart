@@ -37,6 +37,22 @@ class Prefs {
 
   Future<void> setRecents(List<Recent> r) => _p.setString('recents', jsonEncode([for (final x in r) x.toJson()]));
 
+  Map<String, String> get _priorModes {
+    try {
+      final m = jsonDecode(_p.getString('prior_scootermode') ?? '{}') as Map;
+      return {for (final e in m.entries) if (e.key is String && e.value is String) e.key as String: e.value as String};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// The scooter's mode before we provisioned it, to restore on uninstall.
+  String? priorScooterMode(String host) => _priorModes[host];
+  Future<void> setPriorScooterMode(String host, String mode) =>
+      _p.setString('prior_scootermode', jsonEncode({..._priorModes, host: mode}));
+  Future<void> clearPriorScooterMode(String host) =>
+      _p.setString('prior_scootermode', jsonEncode({..._priorModes}..remove(host)));
+
   int get skippedOpenDash => _p.getInt('skipped_opendash') ?? 0;
   Future<void> setSkippedOpenDash(int b) => _p.setInt('skipped_opendash', b);
   int get skippedCompanion => _p.getInt('skipped_companion') ?? 0;

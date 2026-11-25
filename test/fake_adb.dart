@@ -11,15 +11,16 @@ class FakeAdb implements Adb {
   final Object? installError;
   final List<String> log = [];
   ProvisionOutcome provisionOutcome = ProvisionOutcome.ok;
+  String? provisionDetail;
   int provisionCalls = 0;
 
   @override
   Future<ConnectOutcome> connect(String host) async => ConnectOutcome.ok;
 
   @override
-  Future<ProvisionOutcome> provision(String host) async {
+  Future<(ProvisionOutcome, String?)> provision(String host) async {
     provisionCalls++;
-    return provisionOutcome;
+    return (provisionOutcome, provisionDetail);
   }
 
   @override

@@ -107,9 +107,12 @@ class ConnectionNotifier extends Notifier<ConnectionState> {
       var outcome = await _adb.connect(host);
       _log('connect $host: ${outcome.name}');
       if (outcome == ConnectOutcome.unauthorized) {
-        final prov = await _adb.provision(host);
+        final (prov, prior) = await _adb.provision(host);
         _log('provision $host: ${prov.name}');
         if (prov == ProvisionOutcome.ok) {
+          if (prior != null && prior.isNotEmpty && prior != 'mfg') {
+            await ref.read(prefsProvider).setPriorScooterMode(host, prior);
+          }
           outcome = await _adb.connect(host);
           _log('reconnect $host: ${outcome.name}');
         }

@@ -63,6 +63,20 @@ void main() {
     expect(c.read(recentsProvider).single.build, 7);
   });
 
+  test('a prior non-mfg mode is remembered after provisioning', () async {
+    final adb = _ProvisionsThenConnects()..provisionDetail = 'cust';
+    final c = await make(adb: adb);
+    await c.read(connectionProvider.notifier).connect('10.1.1.5');
+    expect(c.read(prefsProvider).priorScooterMode('10.1.1.5'), 'cust');
+  });
+
+  test('an already-mfg scooter records no prior mode', () async {
+    final adb = _ProvisionsThenConnects()..provisionDetail = 'mfg';
+    final c = await make(adb: adb);
+    await c.read(connectionProvider.notifier).connect('10.1.1.5');
+    expect(c.read(prefsProvider).priorScooterMode('10.1.1.5'), isNull);
+  });
+
   test('an unauthorised phone is provisioned and then connects', () async {
     final adb = _ProvisionsThenConnects();
     final c = await make(adb: adb);

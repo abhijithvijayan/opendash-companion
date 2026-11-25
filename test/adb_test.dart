@@ -25,7 +25,7 @@ void main() {
       ('???', ProvisionOutcome.failed),
     ]) {
       final adb = PigeonAdb(api: _StubApi(ProvisionReply(outcome: s)));
-      expect(await adb.provision('h'), e);
+      expect(await adb.provision('h'), (e, null));
     }
   });
 }
