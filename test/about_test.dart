@@ -1,6 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:opendash_companion/state/prefs.dart';
+import 'package:opendash_companion/state/providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:opendash_companion/licenses.dart';
 import 'package:opendash_companion/ui/about_screen.dart';
 
@@ -12,7 +16,12 @@ void main() {
   });
 
   testWidgets('About credits the author and the libraries', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: AboutScreen()));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = Prefs(await SharedPreferences.getInstance());
+    await tester.pumpWidget(ProviderScope(
+      overrides: [prefsProvider.overrideWithValue(prefs)],
+      child: const MaterialApp(home: AboutScreen()),
+    ));
     expect(find.text('Development build'), findsOneWidget);
     for (final key in [
       'about-repo',

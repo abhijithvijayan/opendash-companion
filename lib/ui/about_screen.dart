@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../releases/update_schedule.dart';
 import '../state/providers.dart';
 import 'ack_screen.dart';
 import 'report_actions.dart';
@@ -47,6 +48,11 @@ class AboutScreen extends ConsumerWidget {
             icon: Icons.shield_outlined,
             title: 'Privacy',
             body: 'This app talks only to your scooter and to GitHub. It collects nothing.',
+          ),
+          const SectionLabel('Notifications'),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: _NotifyToggle(),
           ),
           const SectionLabel('Project'),
           Card(
@@ -177,6 +183,32 @@ class AboutScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _NotifyToggle extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_NotifyToggle> createState() => _NotifyToggleState();
+}
+
+class _NotifyToggleState extends ConsumerState<_NotifyToggle> {
+  @override
+  Widget build(BuildContext context) {
+    final prefs = ref.watch(prefsProvider);
+    return SwitchListTile(
+      key: const ValueKey('about-notify-updates'),
+      secondary: const Icon(Icons.notifications_outlined),
+      title: const Text('Notify me about updates'),
+      subtitle: const Text('Checks GitHub a few times a day for new releases'),
+      value: prefs.notifyUpdates,
+      onChanged: (v) async {
+        await prefs.setNotifyUpdates(v);
+        setState(() {});
+        try {
+          await (v ? scheduleUpdateCheck() : cancelUpdateCheck());
+        } catch (_) {}
+      },
     );
   }
 }

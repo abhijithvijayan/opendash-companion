@@ -1,11 +1,16 @@
 import 'dart:io';
 
+import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
 
 import 'adb/adb_api.g.dart';
 import 'licenses.dart';
+import 'releases/notifications.dart';
+import 'releases/update_schedule.dart';
+import 'releases/update_worker.dart';
 import 'report/app_log.dart';
 import 'state/auto_send.dart';
 import 'state/prefs.dart';
@@ -14,10 +19,28 @@ import 'ui/ack_screen.dart';
 import 'ui/connect_screen.dart';
 import 'ui/theme.dart';
 
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, _) async {
+    WidgetsFlutterBinding.ensureInitialized();
+    final prefs = Prefs(await SharedPreferences.getInstance());
+    await initNotifications();
+    return runUpdateCheck(prefs: prefs, client: http.Client(), notify: showUpdateNotification);
+  });
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   registerLicenses();
   final prefs = Prefs(await SharedPreferences.getInstance());
+  try {
+    await initNotifications();
+    await requestNotificationPermission();
+    await Workmanager().initialize(callbackDispatcher);
+    if (prefs.notifyUpdates) await scheduleUpdateCheck();
+  } catch (_) {
+    // Notices are optional: never let them block launch.
+  }
   // The log lives with the app's files: the temp directory is wiped on every update.
   final log = AppLog(File('${await AdbHostApi().filesDir()}/logs/companion.log'));
   runApp(ProviderScope(
