@@ -55,6 +55,16 @@ android {
             excludes += setOf("META-INF/versions/9/OSGI-INF/MANIFEST.MF", "META-INF/LICENSE*", "META-INF/NOTICE*")
         }
     }
+
+    lint {
+        // Android Lint's doc-comment parser crashes (NoSuchMethodError:
+        // List.removeLast()) under the CI JDK while analysing Kotlin KDoc, which
+        // aborts `lintVitalAnalyzeRelease`. It's a lint-tool bug, not a code
+        // issue; `flutter analyze` already gates code quality, so skip lint on
+        // the release build.
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
 }
 
 kotlin {
