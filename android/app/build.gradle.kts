@@ -45,6 +45,7 @@ android {
             // Without android/key.properties a release build is debug-signed;
             // scripts/release.sh refuses to publish one.
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
