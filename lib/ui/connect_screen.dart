@@ -5,10 +5,12 @@ import 'package:material_ui/material_ui.dart';
 
 import '../adb/adb.dart';
 import '../discovery/scan.dart';
+import '../flows.dart';
 import '../state/providers.dart';
 import 'about_screen.dart';
 import 'manual_key_screen.dart';
 import 'scooter_screen.dart';
+import 'sealed_screen.dart';
 import 'update_notices.dart';
 import 'widgets.dart';
 
@@ -68,7 +70,12 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
         nav.push(MaterialPageRoute(builder: (_) => const ScooterScreen()));
       } else if (next.outcome == ConnectOutcome.unauthorized && prev?.outcome != ConnectOutcome.unauthorized) {
         nav.popUntil((r) => r.isFirst);
-        nav.push(MaterialPageRoute(builder: (_) => ManualKeyScreen(host: next.host!)));
+        final host = next.host!;
+        nav.push(MaterialPageRoute(
+          builder: (_) => accessFallbackFor(next.provision) == AccessFallback.sealed
+              ? SealedScreen(host: host)
+              : ManualKeyScreen(host: host),
+        ));
       }
     });
     final conn = ref.watch(connectionProvider);

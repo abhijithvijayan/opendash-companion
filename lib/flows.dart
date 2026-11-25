@@ -11,6 +11,16 @@ import 'releases/verify.dart';
 import 'scooter/ids.dart';
 import 'scooter/operations.dart';
 
+/// Which screen to show when a scooter stays unauthorised after auto-provisioning.
+enum AccessFallback { copyKey, sealed }
+
+/// A scooter that refused provisioning (or was injected yet still refuses) can't be
+/// helped by copying a key either; only an unreachable/unattempted one can.
+AccessFallback accessFallbackFor(ProvisionOutcome? provision) => switch (provision) {
+      null || ProvisionOutcome.unreachable => AccessFallback.copyKey,
+      ProvisionOutcome.unimplemented || ProvisionOutcome.failed || ProvisionOutcome.ok => AccessFallback.sealed,
+    };
+
 typedef Inspect = Future<ApkInfo?> Function(String path);
 
 (OpStep, StepAction) _download(http.Client client, Release r, Directory dir, void Function(String) done, Duration idleTimeout) => (

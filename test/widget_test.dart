@@ -23,7 +23,8 @@ import 'fake_adb.dart';
 
 class _SecondTime extends FakeAdb {
   _SecondTime() : super(answers: {'pm path com.olaelectric.hmiclient': 'package:/x.apk'}) {
-    provisionOutcome = ProvisionOutcome.unimplemented;
+    // unreachable → the copy-key ManualKeyScreen (with "Try again"), not the sealed dead-end.
+    provisionOutcome = ProvisionOutcome.unreachable;
   }
   int calls = 0;
   @override

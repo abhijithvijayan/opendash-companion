@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:opendash_companion/adb/adb.dart';
 import 'package:opendash_companion/adb/adb_api.g.dart';
 import 'package:opendash_companion/flows.dart';
 import 'package:opendash_companion/releases/release.dart';
@@ -114,5 +115,13 @@ void main() {
     final adb = FakeAdb();
     await sendToScooterOps(adb, _client, _rel('00'), dir, inspect: (_) async => _info(kOpenDashCertSha256), manual: true).run().last;
     expect(adb.log, isEmpty);
+  });
+
+  test('access fallback: attempted-and-refused is sealed, otherwise copy-key', () {
+    expect(accessFallbackFor(null), AccessFallback.copyKey);
+    expect(accessFallbackFor(ProvisionOutcome.unreachable), AccessFallback.copyKey);
+    expect(accessFallbackFor(ProvisionOutcome.unimplemented), AccessFallback.sealed);
+    expect(accessFallbackFor(ProvisionOutcome.failed), AccessFallback.sealed);
+    expect(accessFallbackFor(ProvisionOutcome.ok), AccessFallback.sealed);
   });
 }
