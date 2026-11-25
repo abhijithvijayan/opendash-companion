@@ -63,12 +63,38 @@ void main() {
     expect(c.read(recentsProvider).single.build, 7);
   });
 
-  test('an unauthorised phone is not connected', () async {
-    final c = await make(adb: _Refusing());
+  test('an unauthorised phone is provisioned and then connects', () async {
+    final adb = _ProvisionsThenConnects();
+    final c = await make(adb: adb);
+    await c.read(connectionProvider.notifier).connect('10.1.1.5');
+    expect(c.read(connectionProvider).connected, isTrue);
+    expect(adb.provisionCalls, 1);
+  });
+
+  test('provision unimplemented leaves it unauthorised with the outcome recorded', () async {
+    final c = await make(adb: _Refusing()..provisionOutcome = ProvisionOutcome.unimplemented);
     await c.read(ackProvider.notifier).accept();
     await c.read(connectionProvider.notifier).connect('10.1.1.5');
-    expect(c.read(connectionProvider).outcome, ConnectOutcome.unauthorized);
+    final s = c.read(connectionProvider);
+    expect(s.outcome, ConnectOutcome.unauthorized);
+    expect(s.provision, ProvisionOutcome.unimplemented);
     expect(c.read(actionsEnabledProvider), isFalse);
+  });
+
+  test('provision ok but still unauthorised does not loop', () async {
+    final adb = _Refusing()..provisionOutcome = ProvisionOutcome.ok;
+    final c = await make(adb: adb);
+    await c.read(connectionProvider.notifier).connect('10.1.1.5');
+    expect(c.read(connectionProvider).provision, ProvisionOutcome.ok);
+    expect(c.read(connectionProvider).connected, isFalse);
+    expect(adb.provisionCalls, 1);
+  });
+
+  test('an already-trusted phone never provisions', () async {
+    final adb = FakeAdb(answers: _scooter);
+    final c = await make(adb: adb);
+    await c.read(connectionProvider.notifier).connect('10.1.1.5');
+    expect(adb.provisionCalls, 0);
   });
 
   test('skipping a build is remembered', () async {
@@ -110,4 +136,11 @@ class _Recording extends FakeAdb {
     hosts.add(host);
     return ConnectOutcome.ok;
   }
+}
+
+class _ProvisionsThenConnects extends FakeAdb {
+  _ProvisionsThenConnects() : super(answers: _scooter);
+  @override
+  Future<ConnectOutcome> connect(String host) async =>
+      provisionCalls == 0 ? ConnectOutcome.unauthorized : ConnectOutcome.ok;
 }

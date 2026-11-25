@@ -22,7 +22,9 @@ import 'package:opendash_companion/ui/report_actions.dart';
 import 'fake_adb.dart';
 
 class _SecondTime extends FakeAdb {
-  _SecondTime() : super(answers: {'pm path com.olaelectric.hmiclient': 'package:/x.apk'});
+  _SecondTime() : super(answers: {'pm path com.olaelectric.hmiclient': 'package:/x.apk'}) {
+    provisionOutcome = ProvisionOutcome.unimplemented;
+  }
   int calls = 0;
   @override
   Future<ConnectOutcome> connect(String host) async => ++calls == 1 ? ConnectOutcome.unauthorized : ConnectOutcome.ok;

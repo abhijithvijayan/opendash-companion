@@ -81,12 +81,15 @@ class RecentsNotifier extends Notifier<List<Recent>> {
 final recentsProvider = NotifierProvider<RecentsNotifier, List<Recent>>(RecentsNotifier.new);
 
 class ConnectionState {
-  const ConnectionState({this.host, this.outcome, this.status, this.busy = false, this.error});
+  const ConnectionState({this.host, this.outcome, this.status, this.busy = false, this.error, this.provision});
   final String? host;
   final ConnectOutcome? outcome;
   final ScooterStatus? status;
   final bool busy;
   final String? error;
+
+  /// Result of auto-provisioning the adb key; null when it wasn't attempted.
+  final ProvisionOutcome? provision;
 
   bool get connected => outcome == ConnectOutcome.ok;
 }
@@ -101,8 +104,20 @@ class ConnectionNotifier extends Notifier<ConnectionState> {
     host = normalizeHost(host);
     state = ConnectionState(host: host, busy: true);
     try {
-      final outcome = await _adb.connect(host);
+      var outcome = await _adb.connect(host);
       _log('connect $host: ${outcome.name}');
+      if (outcome == ConnectOutcome.unauthorized) {
+        final prov = await _adb.provision(host);
+        _log('provision $host: ${prov.name}');
+        if (prov == ProvisionOutcome.ok) {
+          outcome = await _adb.connect(host);
+          _log('reconnect $host: ${outcome.name}');
+        }
+        if (outcome != ConnectOutcome.ok) {
+          state = ConnectionState(host: host, outcome: ConnectOutcome.unauthorized, provision: prov);
+          return;
+        }
+      }
       state = ConnectionState(host: host, outcome: outcome, busy: outcome == ConnectOutcome.ok);
       if (outcome == ConnectOutcome.ok) await refresh();
     } catch (e) {
