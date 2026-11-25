@@ -244,6 +244,48 @@ data class ConnectReply (
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
+data class ProvisionReply (
+  /** 'ok', 'unimplemented', 'unreachable' or 'failed'. */
+  val outcome: String,
+  val detail: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): ProvisionReply {
+      val outcome = pigeonVar_list[0] as String
+      val detail = pigeonVar_list[1] as String?
+      return ProvisionReply(outcome, detail)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      outcome,
+      detail,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as ProvisionReply
+    return AdbApiPigeonUtils.deepEquals(this.outcome, other.outcome) && AdbApiPigeonUtils.deepEquals(this.detail, other.detail)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + AdbApiPigeonUtils.deepHash(this.outcome)
+    result = 31 * result + AdbApiPigeonUtils.deepHash(this.detail)
+    return result
+  }
+  override fun toString(): String {
+    return "ProvisionReply(outcome=$outcome, detail=$detail)"
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
 data class ShellReply (
   val output: String,
   val exitCode: Long
@@ -342,10 +384,15 @@ private open class AdbApiPigeonCodec : StandardMessageCodec() {
       }
       130.toByte() -> {
         (readValue(buffer) as? List<Any?>)?.let {
-          ShellReply.fromList(it)
+          ProvisionReply.fromList(it)
         }
       }
       131.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          ShellReply.fromList(it)
+        }
+      }
+      132.toByte() -> {
         (readValue(buffer) as? List<Any?>)?.let {
           ApkInfo.fromList(it)
         }
@@ -359,12 +406,16 @@ private open class AdbApiPigeonCodec : StandardMessageCodec() {
         stream.write(129)
         writeValue(stream, value.toList())
       }
-      is ShellReply -> {
+      is ProvisionReply -> {
         stream.write(130)
         writeValue(stream, value.toList())
       }
-      is ApkInfo -> {
+      is ShellReply -> {
         stream.write(131)
+        writeValue(stream, value.toList())
+      }
+      is ApkInfo -> {
+        stream.write(132)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -376,6 +427,8 @@ private open class AdbApiPigeonCodec : StandardMessageCodec() {
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface AdbHostApi {
   suspend fun connect(host: String, port: Long): ConnectReply
+  /** Asks the scooter's gRPC service to accept this phone's adb key. */
+  suspend fun provision(host: String): ProvisionReply
   suspend fun shell(command: String): ShellReply
   /**
    * Streams the APK to `cmd package install`. Answers the installer's text
@@ -418,6 +471,25 @@ interface AdbHostApi {
             CoroutineScope(Dispatchers.Main).launch {
               val wrapped: List<Any?> = try {
                 listOf(api.connect(hostArg, portArg))
+              } catch (exception: Throwable) {
+                AdbApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.opendash_companion.AdbHostApi.provision$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val hostArg = args[0] as String
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.provision(hostArg))
               } catch (exception: Throwable) {
                 AdbApiPigeonUtils.wrapError(exception)
               }

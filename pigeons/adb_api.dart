@@ -18,6 +18,14 @@ class ConnectReply {
   String? detail;
 }
 
+class ProvisionReply {
+  ProvisionReply(this.outcome, this.detail);
+
+  /// 'ok', 'unimplemented', 'unreachable' or 'failed'.
+  String outcome;
+  String? detail;
+}
+
 class ShellReply {
   ShellReply(this.output, this.exitCode);
   String output;
@@ -36,6 +44,10 @@ class ApkInfo {
 abstract class AdbHostApi {
   @async
   ConnectReply connect(String host, int port);
+
+  /// Asks the scooter's gRPC service to accept this phone's adb key.
+  @async
+  ProvisionReply provision(String host);
 
   @async
   ShellReply shell(String command);

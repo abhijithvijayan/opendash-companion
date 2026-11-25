@@ -158,6 +158,57 @@ class ConnectReply {
   }
 }
 
+class ProvisionReply {
+  ProvisionReply({
+    required this.outcome,
+    this.detail,
+  });
+
+  /// 'ok', 'unimplemented', 'unreachable' or 'failed'.
+  String outcome;
+
+  String? detail;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      outcome,
+      detail,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static ProvisionReply decode(Object result) {
+    result as List<Object?>;
+    return ProvisionReply(
+      outcome: result[0]! as String,
+      detail: result[1] as String?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! ProvisionReply || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(outcome, other.outcome) && _deepEquals(detail, other.detail);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'ProvisionReply(outcome: $outcome, detail: $detail)';
+  }
+}
+
 class ShellReply {
   ShellReply({
     required this.output,
@@ -279,11 +330,14 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is ConnectReply) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
-    }    else if (value is ShellReply) {
+    }    else if (value is ProvisionReply) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    }    else if (value is ApkInfo) {
+    }    else if (value is ShellReply) {
       buffer.putUint8(131);
+      writeValue(buffer, value.encode());
+    }    else if (value is ApkInfo) {
+      buffer.putUint8(132);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -296,8 +350,10 @@ class _PigeonCodec extends StandardMessageCodec {
       case 129:
         return ConnectReply.decode(readValue(buffer)!);
       case 130:
-        return ShellReply.decode(readValue(buffer)!);
+        return ProvisionReply.decode(readValue(buffer)!);
       case 131:
+        return ShellReply.decode(readValue(buffer)!);
+      case 132:
         return ApkInfo.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -338,6 +394,25 @@ class AdbHostApi {
     )
     ;
     return pigeonVar_replyValue! as ConnectReply;
+  }
+
+  /// Asks the scooter's gRPC service to accept this phone's adb key.
+  Future<ProvisionReply> provision(String host) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.opendash_companion.AdbHostApi.provision$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[host]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as ProvisionReply;
   }
 
   Future<ShellReply> shell(String command) async {
