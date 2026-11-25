@@ -56,6 +56,26 @@ class AdbBridge(private val context: Context, private val events: AdbEvents) : A
         ConnectReply("ok", null)
     }
 
+    override suspend fun provision(host: String): ProvisionReply = withContext(Dispatchers.IO) {
+        // adbd reads the key store line "<base64> <comment>"; keep only the key
+        // bytes from publicKey() and tag it so the injected key is identifiable.
+        val keyLine = publicKey().substringBefore(' ') + " adb@opendash"
+        val reply = WifiCanProvisioner.provision(host, keyLine)
+        if (reply.outcome != "ok") return@withContext reply
+        // Key injected and adbd bounced. Give adbd a moment to accept us with a
+        // best-effort probe; the Dart layer re-runs connect() and decides, so we
+        // report "ok" regardless of what this probe sees.
+        runCatching {
+            val probe = Kadb.create(host, 5555, connectTimeout = 3000, socketTimeout = 6000)
+            try {
+                probe.shell("echo ok")
+            } finally {
+                runCatching { probe.close() }
+            }
+        }
+        ProvisionReply("ok", null)
+    }
+
     override suspend fun shell(command: String): ShellReply = withContext(Dispatchers.IO) {
         val k = kadb ?: throw AdbApiError("not_connected", "Not connected", null)
         try {

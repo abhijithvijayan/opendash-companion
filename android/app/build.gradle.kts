@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.protobuf") version "0.9.4"
 }
 
 val keyProperties = Properties().apply {
@@ -64,6 +65,40 @@ dependencies {
     implementation("com.flyfishxu:kadb:2.1.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("androidx.core:core-ktx:1.17.0")
+
+    // gRPC + protobuf (lite) for the wifican provisioner.
+    implementation("io.grpc:grpc-okhttp:1.62.2")
+    implementation("io.grpc:grpc-protobuf-lite:1.62.2")
+    implementation("io.grpc:grpc-kotlin-stub:1.4.1")
+    implementation("com.google.protobuf:protobuf-kotlin-lite:3.25.3")
+    // Required by generated gRPC Java stubs (@javax.annotation.Generated).
+    compileOnly("javax.annotation:javax.annotation-api:1.3.2")
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.25.3"
+    }
+    plugins {
+        create("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.62.2"
+        }
+        create("grpckt") {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.4.1:jdk8@jar"
+        }
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") { option("lite") }
+                create("kotlin") { option("lite") }
+            }
+            task.plugins {
+                create("grpc") { option("lite") }
+                create("grpckt") { option("lite") }
+            }
+        }
+    }
 }
 
 flutter {

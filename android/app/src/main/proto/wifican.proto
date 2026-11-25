@@ -1,0 +1,30 @@
+// Trimmed from the authoritative wifican.proto extracted from a Gen 1 head
+// unit's /vendor/bin/diagnostics_server. Only the single RPC this app needs —
+// ExecuteADBCommand — plus the messages/enum it references are kept here.
+//
+// Source of truth: ola-s1-pro-gen1/proto/wifican.proto.
+
+syntax = "proto3";
+
+package wifican;
+
+option go_package = "./wifican";
+
+enum RespStatus {
+  RESP_NONE = 0;
+  RESP_SUCCESS = 1;
+  RESP_FAIL = 2;
+}
+
+message Command {
+  string cmd_msg = 1;
+}
+
+message Response {
+  RespStatus status = 1;
+  string status_msg = 2;
+}
+
+service WifiCanRpc {
+  rpc ExecuteADBCommand (Command) returns (Response);
+}
