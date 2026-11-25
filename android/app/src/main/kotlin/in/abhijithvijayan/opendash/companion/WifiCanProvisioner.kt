@@ -43,6 +43,10 @@ object WifiCanProvisioner {
             return@withContext ProvisionReply("unreachable", e.message ?: e.javaClass.simpleName)
         }
         try {
+            // 0. Capture the scootermode in effect before we touch it, so a later
+            //    uninstall can restore it. Carried back in ProvisionReply.detail.
+            val priorMode = exec(channel, "getprop persist.ola.security.scootermode").trim()
+
             // 1. Force manufacturing mode: keeps IPv4 5555/50005 open. Never set "cust".
             exec(channel, "setprop persist.ola.security.scootermode mfg")
 
@@ -84,6 +88,28 @@ object WifiCanProvisioner {
                 if (out.trim().any { it in '1'..'9' }) break
             }
 
+            ProvisionReply("ok", priorMode)
+        } catch (e: StatusException) {
+            ProvisionReply(outcomeFor(e.status), e.message)
+        } catch (e: StatusRuntimeException) {
+            ProvisionReply(outcomeFor(e.status), e.message)
+        } catch (e: Exception) {
+            ProvisionReply("failed", e.message ?: e.javaClass.simpleName)
+        } finally {
+            runCatching { channel.shutdownNow() }
+        }
+    }
+
+    /// Sets `persist.ola.security.scootermode` to [mode] over the same gRPC
+    /// service, mapping the outcome exactly as [provision] does.
+    suspend fun setScooterMode(host: String, mode: String): ProvisionReply = withContext(Dispatchers.IO) {
+        val channel = try {
+            channel(host)
+        } catch (e: Exception) {
+            return@withContext ProvisionReply("unreachable", e.message ?: e.javaClass.simpleName)
+        }
+        try {
+            exec(channel, "setprop persist.ola.security.scootermode $mode")
             ProvisionReply("ok", null)
         } catch (e: StatusException) {
             ProvisionReply(outcomeFor(e.status), e.message)

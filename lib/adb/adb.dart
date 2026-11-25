@@ -26,6 +26,7 @@ class InstallFailure implements Exception {
 abstract class Adb {
   Future<ConnectOutcome> connect(String host);
   Future<ProvisionOutcome> provision(String host);
+  Future<ProvisionOutcome> setScooterMode(String host, String mode);
   Future<ShellReply> shell(String cmd);
   Future<void> install(String apkPath, List<String> options, {void Function(int sent, int total)? onProgress});
   Future<void> push(String localPath, String remotePath, {void Function(int sent, int total)? onProgress});
@@ -54,6 +55,17 @@ class PigeonAdb implements Adb, AdbEvents {
   @override
   Future<ProvisionOutcome> provision(String host) async {
     final reply = await api.provision(host);
+    return switch (reply.outcome) {
+      'ok' => ProvisionOutcome.ok,
+      'unimplemented' => ProvisionOutcome.unimplemented,
+      'unreachable' => ProvisionOutcome.unreachable,
+      _ => ProvisionOutcome.failed,
+    };
+  }
+
+  @override
+  Future<ProvisionOutcome> setScooterMode(String host, String mode) async {
+    final reply = await api.setScooterMode(host, mode);
     return switch (reply.outcome) {
       'ok' => ProvisionOutcome.ok,
       'unimplemented' => ProvisionOutcome.unimplemented,

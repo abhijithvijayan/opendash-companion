@@ -49,6 +49,10 @@ abstract class AdbHostApi {
   @async
   ProvisionReply provision(String host);
 
+  /// Sets `persist.ola.security.scootermode` over the scooter's gRPC service.
+  @async
+  ProvisionReply setScooterMode(String host, String mode);
+
   @async
   ShellReply shell(String command);
 

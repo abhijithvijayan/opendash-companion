@@ -23,6 +23,12 @@ class FakeAdb implements Adb {
   }
 
   @override
+  Future<ProvisionOutcome> setScooterMode(String host, String mode) async {
+    log.add('setScooterMode $host $mode');
+    return ProvisionOutcome.ok;
+  }
+
+  @override
   Future<ShellReply> shell(String cmd) async {
     log.add(cmd);
     for (final e in answers.entries) {

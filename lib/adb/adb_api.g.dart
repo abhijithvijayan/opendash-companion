@@ -415,6 +415,25 @@ class AdbHostApi {
     return pigeonVar_replyValue! as ProvisionReply;
   }
 
+  /// Sets `persist.ola.security.scootermode` over the scooter's gRPC service.
+  Future<ProvisionReply> setScooterMode(String host, String mode) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.opendash_companion.AdbHostApi.setScooterMode$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[host, mode]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as ProvisionReply;
+  }
+
   Future<ShellReply> shell(String command) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.opendash_companion.AdbHostApi.shell$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(

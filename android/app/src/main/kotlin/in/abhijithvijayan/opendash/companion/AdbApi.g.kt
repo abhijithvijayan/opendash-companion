@@ -429,6 +429,8 @@ interface AdbHostApi {
   suspend fun connect(host: String, port: Long): ConnectReply
   /** Asks the scooter's gRPC service to accept this phone's adb key. */
   suspend fun provision(host: String): ProvisionReply
+  /** Sets `persist.ola.security.scootermode` over the scooter's gRPC service. */
+  suspend fun setScooterMode(host: String, mode: String): ProvisionReply
   suspend fun shell(command: String): ShellReply
   /**
    * Streams the APK to `cmd package install`. Answers the installer's text
@@ -490,6 +492,26 @@ interface AdbHostApi {
             CoroutineScope(Dispatchers.Main).launch {
               val wrapped: List<Any?> = try {
                 listOf(api.provision(hostArg))
+              } catch (exception: Throwable) {
+                AdbApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.opendash_companion.AdbHostApi.setScooterMode$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val hostArg = args[0] as String
+            val modeArg = args[1] as String
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.setScooterMode(hostArg, modeArg))
               } catch (exception: Throwable) {
                 AdbApiPigeonUtils.wrapError(exception)
               }

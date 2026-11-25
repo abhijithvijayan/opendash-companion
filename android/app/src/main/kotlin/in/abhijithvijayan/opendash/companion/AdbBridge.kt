@@ -76,6 +76,10 @@ class AdbBridge(private val context: Context, private val events: AdbEvents) : A
         ProvisionReply("ok", null)
     }
 
+    override suspend fun setScooterMode(host: String, mode: String): ProvisionReply = withContext(Dispatchers.IO) {
+        WifiCanProvisioner.setScooterMode(host, mode)
+    }
+
     override suspend fun shell(command: String): ShellReply = withContext(Dispatchers.IO) {
         val k = kadb ?: throw AdbApiError("not_connected", "Not connected", null)
         try {
