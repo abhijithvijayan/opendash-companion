@@ -198,6 +198,12 @@ class _Body extends ConsumerWidget {
               label: const Text('Start OpenDash'),
             ),
             const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: enabled ? () => restartOpenDash(context, ref, viaHome: status.openDashIsHome) : null,
+              icon: const Icon(Icons.restart_alt_rounded),
+              label: const Text('Restart OpenDash'),
+            ),
+            const SizedBox(height: 10),
             if (latest != null && latest.build <= status.openDashBuild!) ...[
               OutlinedButton.icon(
                 onPressed: enabled ? () => installFromGitHub(context, ref, latest, update: false) : null,

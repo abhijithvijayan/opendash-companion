@@ -156,6 +156,24 @@ void main() {
     expect(find.text('Update to 0.2.2'), findsOneWidget);
   });
 
+  testWidgets('Restart OpenDash is offered only when OpenDash is installed', (t) async {
+    await pumpApp(t, prefs: {'ack_version': kAckVersion}, adb: FakeAdb(answers: _withOpenDash));
+    await t.enterText(find.byType(TextField), '10.1.1.5');
+    await t.tap(find.text('Connect'));
+    await t.pumpAndSettle();
+    await t.scrollUntilVisible(find.text('Restart OpenDash'), 200);
+    expect(find.text('Restart OpenDash'), findsOneWidget);
+  });
+
+  testWidgets('Restart OpenDash is absent when OpenDash is not installed', (t) async {
+    await pumpApp(t, prefs: {'ack_version': kAckVersion});
+    await t.enterText(find.byType(TextField), '10.1.1.5');
+    await t.tap(find.text('Connect'));
+    await t.pumpAndSettle();
+    expect(find.text('Your scooter'), findsOneWidget);
+    expect(find.text('Restart OpenDash'), findsNothing);
+  });
+
   testWidgets('Send to scooter is offered when OpenDash takes updates from the phone', (t) async {
     final adb = FakeAdb(answers: {
       ..._withOpenDash,

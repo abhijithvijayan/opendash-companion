@@ -86,6 +86,13 @@ Future<void> launchOpenDash(BuildContext context, WidgetRef ref, {required bool 
   _run(context, ref, launchOps(ref.read(adbProvider), viaHome: viaHome));
 }
 
+/// Force-stop + relaunch (launchOps does a fresh-Surface start), to recover a crashed or white-screened dashboard.
+Future<void> restartOpenDash(BuildContext context, WidgetRef ref, {required bool viaHome}) async {
+  final ok = await confirm(context, title: 'Restart OpenDash?', body: kParkedWarning, confirm: 'Restart');
+  if (!ok || !context.mounted) return;
+  _run(context, ref, launchOps(ref.read(adbProvider), viaHome: viaHome));
+}
+
 /// Keep the stored prior mode unless the whole uninstall succeeded, so a retry can still restore it.
 Future<void> forgetPriorModeIfUninstalled(Operation op, Prefs prefs, String? host) async {
   if (host != null && !op.failed) await prefs.clearPriorScooterMode(host);
