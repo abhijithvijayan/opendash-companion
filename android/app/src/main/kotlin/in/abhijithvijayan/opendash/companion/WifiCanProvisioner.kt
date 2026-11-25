@@ -11,6 +11,7 @@ import io.grpc.StatusRuntimeException
 import io.grpc.okhttp.OkHttpChannelBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import wifican.Wifican.Command
 import java.net.InetAddress
@@ -62,8 +63,26 @@ object WifiCanProvisioner {
                 exec(channel, "mount --bind $STAGED_KEY_FILE /adb_keys")
             }
 
-            // 3. Bounce adbd so it re-reads the key store.
-            exec(channel, "stop adbd;start adbd")
+            // 3. Bounce adbd so it re-reads the key store AND rebinds TCP 5555.
+            //    `stop adbd; start adbd` leaves adbd in USB mode on these heads and
+            //    never rebinds 5555, so `adb connect :5555` is refused. Instead set
+            //    the tcp port props and ask init to re-exec adbd via ctl.restart, so
+            //    it re-reads service.adb.tcp.port and listens on TCP.
+            exec(channel, "setprop persist.adb.tcp.port 5555")
+            exec(channel, "setprop service.adb.tcp.port 5555")
+            exec(channel, "setprop ctl.restart adbd")
+
+            // Best-effort wait for adbd to come back LISTENing on 5555 before we
+            // return. Port 5555 is hex 15B3; socket state 0A is LISTEN, so the
+            // grep counts listening sockets on that port across tcp/tcp6. A count
+            // >= 1 (any digit 1-9 in the output) means adbd is up; if it never
+            // appears we still proceed — the Dart layer re-runs connect and is the
+            // real gate, this wait only smooths the timing.
+            for (i in 0 until 8) {
+                delay(1000)
+                val out = exec(channel, "cat /proc/net/tcp /proc/net/tcp6 | grep -c -iE :15B3.*0A")
+                if (out.trim().any { it in '1'..'9' }) break
+            }
 
             ProvisionReply("ok", null)
         } catch (e: StatusException) {
