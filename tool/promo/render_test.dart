@@ -102,6 +102,7 @@ void main() {
     addTearDown(t.platformDispatcher.clearPlatformBrightnessTestValue);
 
     final tmp = Directory.systemTemp.createTempSync('promo');
+    // ignore: invalid_use_of_visible_for_testing_member
     SharedPreferences.setMockInitialValues({'ack_version': kAckVersion, 'make_home': true});
     final prefs = Prefs(await SharedPreferences.getInstance());
     final adb = _Scooter();
