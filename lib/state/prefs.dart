@@ -58,6 +58,13 @@ class Prefs {
   int get skippedCompanion => _p.getInt('skipped_companion') ?? 0;
   Future<void> setSkippedCompanion(int b) => _p.setInt('skipped_companion', b);
 
+  bool get notifyUpdates => _p.getBool('notify_updates') ?? true;
+  Future<void> setNotifyUpdates(bool v) => _p.setBool('notify_updates', v);
+  int get lastNotifiedOpenDash => _p.getInt('last_notified_opendash') ?? 0;
+  Future<void> setLastNotifiedOpenDash(int b) => _p.setInt('last_notified_opendash', b);
+  int get lastNotifiedCompanion => _p.getInt('last_notified_companion') ?? 0;
+  Future<void> setLastNotifiedCompanion(int b) => _p.setInt('last_notified_companion', b);
+
   bool get makeHome => _p.getBool('make_home') ?? true;
   Future<void> setMakeHome(bool v) => _p.setBool('make_home', v);
 }
