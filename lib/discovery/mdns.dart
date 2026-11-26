@@ -27,7 +27,8 @@ String scopedHost(String host, String? iface, List<String> ifaceNames) {
 /// diagnostics port (50005) is probed to tag Ola head units. Empties silently
 /// if mDNS is unavailable — the ping6/subnet sweep still runs as fallback.
 Stream<DiscoveredDevice> mdnsScan({Duration timeout = const Duration(seconds: 6)}) {
-  final out = StreamController<DiscoveredDevice>();
+  var stopped = false;
+  final out = StreamController<DiscoveredDevice>(onCancel: () => stopped = true);
   final seen = <String>{};
   () async {
     nsd.Discovery? disc;
@@ -35,18 +36,28 @@ Stream<DiscoveredDevice> mdnsScan({Duration timeout = const Duration(seconds: 6)
       final ifaceNames = await _wifiIfaceNames();
       disc = await nsd.startDiscovery('_adb._tcp', ipLookupType: nsd.IpLookupType.any);
       Future<void> handle(nsd.Service s, nsd.ServiceStatus status) async {
-        if (status != nsd.ServiceStatus.found) return;
+        if (stopped || status != nsd.ServiceStatus.found) return;
         final name = s.name;
-        if (name != null && !seen.add(name)) return;
+        if (name != null && seen.contains(name)) return;
         final dev = await _toDevice(s, ifaceNames);
-        if (dev != null && !out.isClosed) out.add(dev);
+        if (dev == null || stopped || out.isClosed) return;
+        // Mark seen only once a real, address-bearing device is emitted, so a
+        // bare found-event can't block the later resolved one for the service.
+        if (name != null) seen.add(name);
+        out.add(dev);
       }
 
       disc.addServiceListener(handle);
       for (final s in disc.services) {
+        if (stopped) break;
         await handle(s, nsd.ServiceStatus.found);
       }
-      await Future<void>.delayed(timeout);
+      // Poll so Stop (subscription cancel) or screen dispose ends discovery
+      // promptly, instead of running the full timeout and its probes.
+      final deadline = DateTime.now().add(timeout);
+      while (!stopped && DateTime.now().isBefore(deadline)) {
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      }
     } catch (_) {
       // mDNS unavailable or denied; discovery falls back to the sweep.
     } finally {

@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opendash_companion/discovery/device.dart';
 import 'package:opendash_companion/discovery/scan.dart';
 
 void main() {

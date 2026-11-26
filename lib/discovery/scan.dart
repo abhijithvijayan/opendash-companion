@@ -15,6 +15,12 @@ class FoundHost {
 
 /// Bridges a fallback-sweep hit into the common [DiscoveredDevice] shape, so it
 /// can be grouped with mDNS results. A link-local host carries its EUI-64 MAC.
+///
+/// Known limitation (degraded path): when mDNS is wholly unavailable AND a
+/// provisioned MFG scooter is found only by this sweep, its IPv4 hit (no MAC)
+/// and its `fe80::` hit (MAC from EUI-64) share no signal, so they stay two
+/// rows — the pre-mDNS behaviour. Pairing them without mDNS would need the
+/// scooter's own `ip -o addr` over adb (spec fallback, not built).
 DiscoveredDevice deviceFromHost(FoundHost h) => DiscoveredDevice(
       addresses: [Addr(h.host)],
       diagnostics: h.diagnostics,
