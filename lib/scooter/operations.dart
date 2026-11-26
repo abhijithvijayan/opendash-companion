@@ -37,8 +37,10 @@ class StepWarning implements Exception {
   final String message;
 }
 
+typedef ManualRoute = ({String url, String hint});
+
 class Operation {
-  Operation(this.title, List<(OpStep, StepAction)> plan, {this.cleanup})
+  Operation(this.title, List<(OpStep, StepAction)> plan, {this.cleanup, this.manual})
       : steps = [for (final p in plan) p.$1],
         _actions = [for (final p in plan) p.$2];
 
@@ -46,6 +48,10 @@ class Operation {
 
   /// Run once the steps are over, whether they finished or failed.
   final Future<void> Function()? cleanup;
+
+  /// Where to get the same release by hand when this fails, and what to do
+  /// with it there, if there is such a way.
+  final ManualRoute? manual;
   final List<OpStep> steps;
   final List<StepAction> _actions;
 

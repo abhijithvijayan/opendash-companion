@@ -157,6 +157,19 @@ void main() {
     });
   });
 
+  test('a failed update or install says where to get the release by hand, and what to do with it', () {
+    final co = companionUpdateOps(_client, _rel(_sha), dir, inspect: (_) async => null, pinnedCert: 'aa', handOff: (_) async {});
+    expect(co.manual?.url, 'https://github.com/$kCompanionRepo/releases/latest');
+    expect(co.manual?.hint, contains('install it yourself'));
+    for (final op in [
+      githubInstallOps(FakeAdb(), _client, _rel(_sha), dir, inspect: (_) async => null, makeHome: true),
+      sendToScooterOps(FakeAdb(), _client, _rel(_sha), dir, inspect: (_) async => null, manual: true),
+    ]) {
+      expect(op.manual?.url, 'https://github.com/$kOpenDashRepo/releases/latest');
+      expect(op.manual?.hint, contains('Install from a file'));
+    }
+  });
+
   test('access fallback: attempted-and-refused is sealed, otherwise copy-key', () {
     expect(accessFallbackFor(null), AccessFallback.copyKey);
     expect(accessFallbackFor(ProvisionOutcome.unreachable), AccessFallback.copyKey);

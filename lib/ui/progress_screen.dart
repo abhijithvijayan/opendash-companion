@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart' hide StepState;
+import 'package:url_launcher/url_launcher.dart';
 
 import '../scooter/operations.dart';
 import '../state/providers.dart';
@@ -38,6 +39,17 @@ class ProgressScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     Text('Keep the phone and the scooter on the same network until this finishes.',
                         style: t.textTheme.bodySmall?.copyWith(color: t.colorScheme.onSurfaceVariant), textAlign: TextAlign.center),
+                  ],
+                  if (!running && op.failed && op.manual != null) ...[
+                    const SizedBox(height: 16),
+                    Text(op.manual!.hint,
+                        style: t.textTheme.bodyMedium?.copyWith(color: t.colorScheme.onSurfaceVariant), textAlign: TextAlign.center),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.open_in_new_rounded),
+                      label: const Text('Download from GitHub'),
+                      onPressed: () => launchUrl(Uri.parse(op.manual!.url), mode: LaunchMode.externalApplication).catchError((_) => false),
+                    ),
                   ],
                 ],
               ),

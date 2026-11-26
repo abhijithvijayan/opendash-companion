@@ -186,8 +186,11 @@ final skippedOpenDashProvider = NotifierProvider<SkipNotifier, int>(() => SkipNo
 final skippedCompanionProvider = NotifierProvider<SkipNotifier, int>(() => SkipNotifier(true));
 
 class OperationState {
-  const OperationState(this.title, this.steps, {required this.running, this.background = false});
+  const OperationState(this.title, this.steps, {required this.running, this.background = false, this.manual});
   final String title;
+
+  /// [Operation.manual]: offered once it has failed.
+  final ManualRoute? manual;
   final List<OpStep> steps;
   final bool running;
 
@@ -206,11 +209,11 @@ class OperationNotifier extends Notifier<OperationState?> {
 
   Future<void> start(Operation op, {bool background = false}) async {
     if (running) return;
-    state = OperationState(op.title, op.steps, running: true, background: background);
+    state = OperationState(op.title, op.steps, running: true, background: background, manual: op.manual);
     await for (final steps in op.run()) {
-      state = OperationState(op.title, steps, running: true, background: background);
+      state = OperationState(op.title, steps, running: true, background: background, manual: op.manual);
     }
-    state = OperationState(op.title, state!.steps, running: false, background: background);
+    state = OperationState(op.title, state!.steps, running: false, background: background, manual: op.manual);
     ref.read(appLogProvider).add(describeOperation(op.title, state!.steps, background: background));
     await ref.read(connectionProvider.notifier).refresh();
   }

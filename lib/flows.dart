@@ -23,6 +23,17 @@ AccessFallback accessFallbackFor(ProvisionOutcome? provision) => switch (provisi
 
 typedef Inspect = Future<ApkInfo?> Function(String path);
 
+const ManualRoute _companionByHand = (
+  url: 'https://github.com/$kCompanionRepo/releases/latest',
+  hint: 'You can also download the latest release from GitHub and install it yourself.',
+);
+
+/// Install from a file checks a picked APK against the release key too.
+const ManualRoute _openDashByHand = (
+  url: 'https://github.com/$kOpenDashRepo/releases/latest',
+  hint: 'You can also download the APK from GitHub, then use Install from a file here.',
+);
+
 /// Empties the downloads directory. Only one operation runs at a time, so
 /// whatever is in it is left over from one that has ended.
 Future<void> clearDownloads(Directory dir) async {
@@ -72,7 +83,7 @@ Operation githubInstallOps(Adb adb, http.Client client, Release r, Directory dir
     _download(client, r, dir, (p) => path = p, idleTimeout),
     _verify(r, () => path, inspect, kOpenDashCertSha256, kOpenDashPackage),
     ...installSteps(adb, () => path, makeHome: makeHome),
-  ], cleanup: () => clearDownloads(dir));
+  ], cleanup: () => clearDownloads(dir), manual: _openDashByHand);
 }
 
 /// Download an OpenDash release, check it, and leave it in OpenDash's inbox
@@ -113,7 +124,7 @@ Operation sendToScooterOps(Adb adb, http.Client client, Release r, Directory dir
         await shellStep(adb, 'mv $inbox/opendash-release.json.part $inbox/opendash-release.json')(step, changed);
       }
     ),
-  ], cleanup: () => clearDownloads(dir));
+  ], cleanup: () => clearDownloads(dir), manual: _openDashByHand);
 }
 
 /// Download a companion release, check it against the companion's own key,
@@ -126,5 +137,5 @@ Operation companionUpdateOps(http.Client client, Release r, Directory dir,
     _verify(r, () => path, inspect, pinnedCert, kCompanionPackage),
     // Android's installer has its own copy once handOff returns.
     (OpStep('handoff', 'Open the installer'), (step, changed) => handOff(path)),
-  ], cleanup: () => clearDownloads(dir));
+  ], cleanup: () => clearDownloads(dir), manual: _companionByHand);
 }
