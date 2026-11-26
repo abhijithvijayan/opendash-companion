@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../adb/adb.dart';
 import '../adb/adb_api.g.dart';
+import '../discovery/identity.dart';
 import '../flows.dart';
 import '../releases/release.dart';
 import '../scooter/operations.dart';
@@ -59,18 +60,28 @@ class RecentsNotifier extends Notifier<List<Recent>> {
   @override
   List<Recent> build() => ref.read(prefsProvider).recents;
 
-  Future<void> remember(String host, {int? build}) async {
-    final old = state.where((r) => r.host == host).firstOrNull;
-    final next = [
-      Recent(host, build: build ?? old?.build, seen: DateTime.now().millisecondsSinceEpoch),
-      ...state.where((r) => r.host != host),
-    ].take(5).toList();
+  Future<void> remember(String host, {String? mac, int? build}) async {
+    // Collapse onto the same scooter: by identity (MAC) when known, else by a
+    // shared address. One physical scooter stays one entry across its addresses.
+    final old = state
+        .where((r) => (mac != null && r.mac == mac) || r.host == host || r.addresses.contains(host))
+        .firstOrNull;
+    final addresses = <String>{...?old?.addresses, host}.toList();
+    final display = addresses.firstWhere((a) => !a.contains(':'), orElse: () => addresses.first);
+    final merged = Recent(
+      display,
+      mac: mac ?? old?.mac,
+      addresses: addresses,
+      build: build ?? old?.build,
+      seen: DateTime.now().millisecondsSinceEpoch,
+    );
+    final next = [merged, ...state.where((r) => r != old)].take(5).toList();
     state = next;
     await ref.read(prefsProvider).setRecents(next);
   }
 
   Future<void> forget(String host) async {
-    state = state.where((r) => r.host != host).toList();
+    state = state.where((r) => r.host != host && !r.addresses.contains(host)).toList();
     await ref.read(prefsProvider).setRecents(state);
   }
 }
@@ -97,8 +108,13 @@ class ConnectionNotifier extends Notifier<ConnectionState> {
 
   Adb get _adb => ref.read(adbProvider);
 
-  Future<void> connect(String host) async {
+  /// Identity of the scooter being connected (its MAC), threaded from
+  /// discovery/recents so remembering and prior-mode survive the address change.
+  String? _mac;
+
+  Future<void> connect(String host, {String? mac}) async {
     host = normalizeHost(host);
+    _mac = mac ?? macFromLinkLocal(host);
     state = ConnectionState(host: host, busy: true);
     try {
       var outcome = await _adb.connect(host);
@@ -134,7 +150,7 @@ class ConnectionNotifier extends Notifier<ConnectionState> {
       final status = await readStatus(_adb);
       _log(describeStatus(status));
       state = ConnectionState(host: host, outcome: ConnectOutcome.ok, status: status);
-      await ref.read(recentsProvider.notifier).remember(host, build: status.openDashBuild ?? 0);
+      await ref.read(recentsProvider.notifier).remember(host, mac: _mac, build: status.openDashBuild ?? 0);
     } on AdbFailure catch (e) {
       _log('status read failed: ${e.message}');
       state = ConnectionState(host: host, outcome: ConnectOutcome.unreachable, error: e.message);

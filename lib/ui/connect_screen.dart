@@ -39,11 +39,11 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
     super.dispose();
   }
 
-  void _connect(String host) {
+  void _connect(String host, {String? mac}) {
     if (host.trim().isEmpty) return;
     FocusScope.of(context).unfocus();
     _address.text = host;
-    ref.read(connectionProvider.notifier).connect(host);
+    ref.read(connectionProvider.notifier).connect(host, mac: mac);
   }
 
   void _toggleScan() {
@@ -177,7 +177,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
                         icon: const Icon(Icons.close_rounded),
                         onPressed: () => ref.read(recentsProvider.notifier).forget(r.host),
                       ),
-                      onTap: conn.busy ? null : () => _connect(r.host),
+                      onTap: conn.busy ? null : () => _connect(r.host, mac: r.mac),
                     ),
                   ],
                 ]),
@@ -213,7 +213,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
                       title: Text(d.preferred.host),
                       subtitle: Text(d.diagnostics ? 'Ola head unit' : 'adb device'),
                       trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: conn.busy ? null : () => _connect(d.preferred.host),
+                      onTap: conn.busy ? null : () => _connect(d.preferred.host, mac: d.mac),
                     ),
                   ],
                 ]),

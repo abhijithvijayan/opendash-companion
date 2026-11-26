@@ -6,17 +6,38 @@ import 'package:shared_preferences/shared_preferences.dart';
 const kAckVersion = 1;
 
 class Recent {
-  const Recent(this.host, {this.build, this.seen = 0});
+  const Recent(this.host, {this.mac, this.addresses = const [], this.build, this.seen = 0});
+
+  /// The preferred/display address (IPv4 once the scooter exposes one).
   final String host;
+
+  /// Device identity (NIC MAC) when known, so the same scooter stays one
+  /// entry even as the address it answers on changes with its mode.
+  final String? mac;
+
+  /// Every address this scooter has been reached at.
+  final List<String> addresses;
 
   /// The OpenDash build last seen on this scooter.
   final int? build;
   final int seen;
 
-  Map<String, Object?> toJson() => {'host': host, 'build': build, 'seen': seen};
+  Map<String, Object?> toJson() =>
+      {'host': host, 'mac': mac, 'addresses': addresses, 'build': build, 'seen': seen};
 
-  static Recent? fromJson(Object? m) =>
-      m is Map && m['host'] is String ? Recent(m['host'] as String, build: m['build'] as int?, seen: m['seen'] as int? ?? 0) : null;
+  static Recent? fromJson(Object? m) {
+    if (m is! Map || m['host'] is! String) return null;
+    final host = m['host'] as String;
+    final a = m['addresses'];
+    return Recent(
+      host,
+      mac: m['mac'] as String?,
+      // Pre-identity entries had only a host; keep it as the sole address.
+      addresses: a is List ? [for (final x in a) if (x is String) x] : [host],
+      build: m['build'] as int?,
+      seen: m['seen'] as int? ?? 0,
+    );
+  }
 }
 
 class Prefs {

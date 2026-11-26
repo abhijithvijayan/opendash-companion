@@ -63,6 +63,35 @@ void main() {
     expect(c.read(recentsProvider).single.build, 7);
   });
 
+  test('recents collapse a scooter seen over link-local then IPv4 into one entry, preferring IPv4', () async {
+    final c = await make();
+    final n = c.read(recentsProvider.notifier);
+    await n.remember('fe80::b6ed:d5ff:fe25:2a61%wlan0', mac: 'b4:ed:d5:25:2a:61');
+    await n.remember('172.20.10.5', mac: 'b4:ed:d5:25:2a:61');
+    final r = c.read(recentsProvider);
+    expect(r.length, 1);
+    expect(r.single.host, '172.20.10.5');
+    expect(r.single.addresses, containsAll(['fe80::b6ed:d5ff:fe25:2a61%wlan0', '172.20.10.5']));
+  });
+
+  test('old host-only recents load without data loss', () async {
+    final c = await make(prefs: {'recents': '[{"host":"1.2.3.4","build":9,"seen":5}]'});
+    final r = c.read(recentsProvider).single;
+    expect(r.host, '1.2.3.4');
+    expect(r.mac, isNull);
+    expect(r.addresses, ['1.2.3.4']);
+    expect(r.build, 9);
+  });
+
+  test('forget removes a merged entry by one of its addresses', () async {
+    final c = await make();
+    final n = c.read(recentsProvider.notifier);
+    await n.remember('fe80::1%wlan0', mac: 'aa:aa:aa:aa:aa:aa');
+    await n.remember('172.20.10.5', mac: 'aa:aa:aa:aa:aa:aa');
+    await n.forget('172.20.10.5');
+    expect(c.read(recentsProvider), isEmpty);
+  });
+
   test('a prior non-mfg mode is remembered after provisioning', () async {
     final adb = _ProvisionsThenConnects()..provisionDetail = 'cust';
     final c = await make(adb: adb);
