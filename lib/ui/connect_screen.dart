@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../adb/adb.dart';
+import '../discovery/device.dart';
+import '../discovery/mdns.dart';
 import '../discovery/scan.dart';
 import '../flows.dart';
 import '../state/providers.dart';
@@ -23,13 +25,16 @@ class ConnectScreen extends ConsumerStatefulWidget {
 
 class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   final _address = TextEditingController();
-  StreamSubscription<FoundHost>? _scan;
-  final _found = <FoundHost>[];
+  StreamSubscription<DiscoveredDevice>? _scan;
+  StreamSubscription<DiscoveredDevice>? _mdns;
+  final _found = <DiscoveredDevice>[];
   bool _scanning = false;
+  int _activeScans = 0;
 
   @override
   void dispose() {
     _scan?.cancel();
+    _mdns?.cancel();
     _address.dispose();
     super.dispose();
   }
@@ -44,17 +49,26 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   void _toggleScan() {
     if (_scanning) {
       _scan?.cancel();
-      setState(() => _scanning = false);
+      _mdns?.cancel();
+      setState(() {
+        _scanning = false;
+        _activeScans = 0;
+      });
       return;
     }
     setState(() {
       _found.clear();
       _scanning = true;
+      _activeScans = 2;
     });
-    _scan = scan().listen(
-      (h) => setState(() => _found.add(h)),
-      onDone: () => mounted ? setState(() => _scanning = false) : null,
-    );
+    void onDone() {
+      if (--_activeScans <= 0 && mounted) setState(() => _scanning = false);
+    }
+
+    // mDNS is the reliable primary; the ping6/subnet sweep is the fallback.
+    // Results merge by device identity in [groupDevices].
+    _mdns = mdnsScan().listen((d) => setState(() => _found.add(d)), onDone: onDone);
+    _scan = scan().map(deviceFromHost).listen((d) => setState(() => _found.add(d)), onDone: onDone);
   }
 
   @override
@@ -65,7 +79,11 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
       final nav = Navigator.of(context);
       if (next.connected && !(prev?.connected ?? false)) {
         _scan?.cancel();
-        setState(() => _scanning = false);
+        _mdns?.cancel();
+        setState(() {
+          _scanning = false;
+          _activeScans = 0;
+        });
         nav.popUntil((r) => r.isFirst);
         nav.push(MaterialPageRoute(builder: (_) => const ScooterScreen()));
       } else if (next.outcome == ConnectOutcome.unauthorized && prev?.outcome != ConnectOutcome.unauthorized) {
@@ -79,6 +97,9 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
       }
     });
     final conn = ref.watch(connectionProvider);
+    // One scooter answers on several addresses (its IPv4 and its IPv6
+    // link-local); group them into a single row by device identity.
+    final devices = groupDevices(_found);
     final recents = ref.watch(recentsProvider);
     final known = ref.watch(knownBuildProvider);
     final t = Theme.of(context);
@@ -172,7 +193,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
                 label: Text(_scanning ? 'Stop' : 'Scan'),
               ),
             ),
-            if (_found.isEmpty)
+            if (devices.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
@@ -184,15 +205,15 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
               Card(
                 clipBehavior: Clip.antiAlias,
                 child: Column(children: [
-                  for (final (i, h) in _found.indexed) ...[
+                  for (final (i, d) in devices.indexed) ...[
                     if (i > 0) const Divider(indent: 56),
                     ListTile(
-                      leading: Icon(h.diagnostics ? Icons.electric_scooter_rounded : Icons.devices_other_rounded,
-                          color: h.diagnostics ? cs.primary : cs.onSurfaceVariant),
-                      title: Text(h.host),
-                      subtitle: Text(h.diagnostics ? 'Ola head unit' : 'adb device'),
+                      leading: Icon(d.diagnostics ? Icons.electric_scooter_rounded : Icons.devices_other_rounded,
+                          color: d.diagnostics ? cs.primary : cs.onSurfaceVariant),
+                      title: Text(d.preferred.host),
+                      subtitle: Text(d.diagnostics ? 'Ola head unit' : 'adb device'),
                       trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: conn.busy ? null : () => _connect(h.host),
+                      onTap: conn.busy ? null : () => _connect(d.preferred.host),
                     ),
                   ],
                 ]),

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opendash_companion/discovery/device.dart';
 import 'package:opendash_companion/discovery/scan.dart';
 
 void main() {
@@ -40,5 +41,21 @@ PING ff02::1%wlan0(ff02::1) 56 data bytes
 64 bytes from fe80::b20c:9dff:feba:a122: icmp_seq=2 ttl=64 time=3.0 ms
 ''';
     expect(parsePing6Neighbours(out, 'wlan0', own: {'fe80::aaaa:bbbb:cccc:dddd'}), ['fe80::b20c:9dff:feba:a122%wlan0']);
+  });
+
+  group('deviceFromHost', () {
+    test('maps a link-local FoundHost to a device carrying its EUI-64 MAC', () {
+      final d = deviceFromHost(const FoundHost('fe80::b6ed:d5ff:fe25:2a61%wlan0', diagnostics: true));
+      expect(d.addresses.single.host, 'fe80::b6ed:d5ff:fe25:2a61%wlan0');
+      expect(d.diagnostics, isTrue);
+      expect(d.mac, 'b4:ed:d5:25:2a:61');
+      expect(d.mdnsName, isNull);
+    });
+
+    test('leaves mac null for an IPv4 FoundHost', () {
+      final d = deviceFromHost(const FoundHost('172.20.10.5', diagnostics: false));
+      expect(d.mac, isNull);
+      expect(d.addresses.single.host, '172.20.10.5');
+    });
   });
 }

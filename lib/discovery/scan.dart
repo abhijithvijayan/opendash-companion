@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import '../scooter/ids.dart';
+import 'device.dart';
+import 'identity.dart';
 
 class FoundHost {
   const FoundHost(this.host, {required this.diagnostics});
@@ -10,6 +12,14 @@ class FoundHost {
   /// The stock diagnostics port answered too: this is an Ola head unit.
   final bool diagnostics;
 }
+
+/// Bridges a fallback-sweep hit into the common [DiscoveredDevice] shape, so it
+/// can be grouped with mDNS results. A link-local host carries its EUI-64 MAC.
+DiscoveredDevice deviceFromHost(FoundHost h) => DiscoveredDevice(
+      addresses: [Addr(h.host)],
+      diagnostics: h.diagnostics,
+      mac: macFromLinkLocal(h.host),
+    );
 
 /// Every other host of each address's /24. The `.1` of each subnet comes first:
 /// on the scooter's own hotspot it is the scooter.
