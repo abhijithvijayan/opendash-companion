@@ -106,6 +106,15 @@ void main() {
     expect(c.read(prefsProvider).priorScooterMode('10.1.1.5'), isNull);
   });
 
+  test('prior mode is stored under device identity, so it survives the address change', () async {
+    final adb = _ProvisionsThenConnects()..provisionDetail = 'cust';
+    final c = await make(adb: adb);
+    // Connect over the link-local; the MAC is derived from it.
+    await c.read(connectionProvider.notifier).connect('fe80::b6ed:d5ff:fe25:2a61%wlan0');
+    // Stored under the MAC, not the address — so a later IPv4-side lookup finds it.
+    expect(c.read(prefsProvider).priorScooterMode('b4:ed:d5:25:2a:61'), 'cust');
+  });
+
   test('an unauthorised phone is provisioned and then connects', () async {
     final adb = _ProvisionsThenConnects();
     final c = await make(adb: adb);

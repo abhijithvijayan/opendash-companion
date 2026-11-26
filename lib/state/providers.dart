@@ -112,6 +112,10 @@ class ConnectionNotifier extends Notifier<ConnectionState> {
   /// discovery/recents so remembering and prior-mode survive the address change.
   String? _mac;
 
+  /// Device key for storage: the MAC when known, else the dialed host. Uninstall
+  /// reads the prior mode under this same key.
+  String? deviceKey(String? host) => _mac ?? host;
+
   Future<void> connect(String host, {String? mac}) async {
     host = normalizeHost(host);
     _mac = mac ?? macFromLinkLocal(host);
@@ -124,7 +128,7 @@ class ConnectionNotifier extends Notifier<ConnectionState> {
         _log('provision $host: ${prov.name}');
         if (prov == ProvisionOutcome.ok) {
           if (prior != null && prior.isNotEmpty && prior != 'mfg') {
-            await ref.read(prefsProvider).setPriorScooterMode(host, prior);
+            await ref.read(prefsProvider).setPriorScooterMode(_mac ?? host, prior);
           }
           outcome = await _adb.connect(host);
           _log('reconnect $host: ${outcome.name}');

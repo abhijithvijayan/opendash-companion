@@ -75,7 +75,9 @@ List<DiscoveredDevice> groupDevices(Iterable<DiscoveredDevice> raw) {
     final d = list[i];
     sig(byMac, d.mac, i);
     sig(byName, d.mdnsName, i);
-    for (final a in d.addresses) sig(byAddr, a.host, i);
+    for (final a in d.addresses) {
+      sig(byAddr, a.host, i);
+    }
   }
 
   final order = <int>[];
@@ -96,7 +98,9 @@ DiscoveredDevice _merge(List<DiscoveredDevice> g) {
   var diag = false;
   String? mac, name;
   for (final d in g) {
-    for (final a in d.addresses) addrs.putIfAbsent(a.host, () => a);
+    for (final a in d.addresses) {
+      addrs.putIfAbsent(a.host, () => a);
+    }
     diag = diag || d.diagnostics;
     mac ??= d.mac;
     name ??= d.mdnsName;

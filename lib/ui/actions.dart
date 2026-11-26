@@ -119,8 +119,8 @@ Future<void> restartOpenDash(BuildContext context, WidgetRef ref, {required bool
 }
 
 /// Keep the stored prior mode unless the whole uninstall succeeded, so a retry can still restore it.
-Future<void> forgetPriorModeIfUninstalled(Operation op, Prefs prefs, String? host) async {
-  if (host != null && !op.failed) await prefs.clearPriorScooterMode(host);
+Future<void> forgetPriorModeIfUninstalled(Operation op, Prefs prefs, String? key) async {
+  if (key != null && !op.failed) await prefs.clearPriorScooterMode(key);
 }
 
 Future<void> uninstallOpenDash(BuildContext context, WidgetRef ref) async {
@@ -132,10 +132,13 @@ Future<void> uninstallOpenDash(BuildContext context, WidgetRef ref) async {
   if (!ok || !context.mounted) return;
   final prefs = ref.read(prefsProvider);
   final host = ref.read(connectionProvider).host;
-  final prior = host == null ? null : prefs.priorScooterMode(host);
+  // Prior mode is stored under the device identity, so it survives the scooter's
+  // address changing after we flip it to MFG. Dialing still uses the host.
+  final key = ref.read(connectionProvider.notifier).deviceKey(host);
+  final prior = key == null ? null : prefs.priorScooterMode(key);
   final op = uninstallOps(ref.read(adbProvider), host: host, priorMode: prior);
   await _run(context, ref, op);
-  await forgetPriorModeIfUninstalled(op, prefs, host);
+  await forgetPriorModeIfUninstalled(op, prefs, key);
 }
 
 Future<void> uninstallOther(BuildContext context, WidgetRef ref, String pkg) async {
