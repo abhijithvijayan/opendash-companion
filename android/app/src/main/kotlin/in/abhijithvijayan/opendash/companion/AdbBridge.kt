@@ -21,7 +21,6 @@ import okio.source
 import java.io.File
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.security.MessageDigest
 
 class AdbBridge(private val context: Context, private val events: AdbEvents) : AdbHostApi {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -159,21 +158,7 @@ class AdbBridge(private val context: Context, private val events: AdbEvents) : A
         return AdbPubkey.line(pem, "opendash-companion")
     }
 
-    override fun inspectApk(path: String): ApkInfo? {
-        val pm = context.packageManager
-        @Suppress("DEPRECATION")
-        val info = pm.getPackageArchiveInfo(path, PackageManager.GET_SIGNING_CERTIFICATES) ?: return null
-        val signing = info.signingInfo
-        val certs = when {
-            signing == null -> emptyList()
-            signing.hasMultipleSigners() -> signing.apkContentsSigners.toList()
-            else -> signing.signingCertificateHistory.toList()
-        }
-        val sha = certs.map { sig ->
-            MessageDigest.getInstance("SHA-256").digest(sig.toByteArray()).joinToString("") { "%02x".format(it) }
-        }
-        return ApkInfo(info.packageName, info.versionName ?: "", info.longVersionCode, sha)
-    }
+    override fun inspectApk(path: String): ApkInfo? = ApkInspector.inspect(context.packageManager, path)
 
     override fun canInstallOnPhone(): Boolean = context.packageManager.canRequestPackageInstalls()
 
