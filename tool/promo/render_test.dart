@@ -34,8 +34,12 @@ const fps = 60;
 const step = Duration(microseconds: 1000000 ~/ fps);
 const phone = Size(1080, 2340);
 const dpr = 2.625;
-const version = '0.3.2';
-const build = 30200;
+/// The OpenDash the film installs: the version in the OpenDash checkout next
+/// to this one, and the build number OpenDash's release gives it.
+final version = RegExp(r'^version:\s*([0-9.]+)', multiLine: true)
+        .firstMatch(File('../opendash/pubspec.yaml').readAsStringSync())!
+        .group(1)!;
+final build = int.parse(Process.runSync('scripts/build-number.sh', [version], workingDirectory: '../opendash').stdout.toString().trim());
 const out = 'build/promo/frames';
 
 /// A scooter with the stock dashboard and no OpenDash, until the install.
