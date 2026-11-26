@@ -72,5 +72,8 @@ class FakeAdb implements Adb {
   }
 
   @override
+  Future<void> cancelTransfer() async {}
+
+  @override
   Future<void> disconnect() async {}
 }

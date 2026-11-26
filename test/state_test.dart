@@ -159,7 +159,7 @@ void main() {
     expect(c.read(prefsProvider).skippedOpenDash, 2050);
   });
 
-  test('cancelling a running operation drops the link and marks it cancelled', () async {
+  test('cancelling a running operation aborts the transfer in place and marks it cancelled', () async {
     final adb = _HangingPush();
     final c = await make(adb: adb);
     final n = c.read(operationProvider.notifier);
@@ -168,7 +168,7 @@ void main() {
     await pumpEventQueue();
     await n.cancel();
     await run;
-    expect(adb.disconnected, isTrue);
+    expect(adb.cancelled, isTrue);
     expect(c.read(operationProvider)!.cancelled, isTrue);
     expect(c.read(operationProvider)!.steps.single.state, StepState.cancelled);
   });
@@ -197,19 +197,19 @@ class _Refusing extends FakeAdb {
   Future<ConnectOutcome> connect(String host) async => ConnectOutcome.unauthorized;
 }
 
-/// A push that hangs until the link is dropped, like a real transfer the rider
-/// interrupts. [disconnect] releases it with a connection error.
+/// A push that hangs until the transfer is cancelled, like a real one the rider
+/// interrupts. [cancelTransfer] releases it in place — the connection stays up.
 class _HangingPush extends FakeAdb {
   final _gate = Completer<void>();
-  bool disconnected = false;
+  bool cancelled = false;
 
   @override
   Future<void> push(String localPath, String remotePath, {void Function(int sent, int total)? onProgress}) => _gate.future;
 
   @override
-  Future<void> disconnect() async {
-    disconnected = true;
-    if (!_gate.isCompleted) _gate.completeError(const AdbFailure('Lost the connection to the scooter.'));
+  Future<void> cancelTransfer() async {
+    cancelled = true;
+    if (!_gate.isCompleted) _gate.completeError(const AdbFailure('Cancelled'));
   }
 }
 

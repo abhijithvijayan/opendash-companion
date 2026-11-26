@@ -26,6 +26,12 @@ class AdbBridge(private val context: Context, private val events: AdbEvents) : A
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     @Volatile private var kadb: Kadb? = null
 
+    /// Set by [cancelTransfer]; the counting source bails on it so a push or
+    /// install stops mid-transfer. Reset at the start of each transfer.
+    @Volatile private var cancelRequested = false
+
+    private class TransferCancelled : Exception()
+
     init {
         KadbCert.configure(OkioFilePrivateKeyStore(File(context.filesDir, "adbkey").toOkioPath()))
         // Copies handed to the installer or a share target ([shareable]). Both
@@ -100,6 +106,7 @@ class AdbBridge(private val context: Context, private val events: AdbEvents) : A
         var lastPosted = 0L
         return object : ForwardingSource(file.source()) {
             override fun read(sink: Buffer, byteCount: Long): Long {
+                if (cancelRequested) throw TransferCancelled()
                 val n = super.read(sink, byteCount)
                 if (n > 0) {
                     sent += n
@@ -117,9 +124,12 @@ class AdbBridge(private val context: Context, private val events: AdbEvents) : A
     override suspend fun push(localPath: String, remotePath: String) = withContext(Dispatchers.IO) {
         val k = kadb ?: throw AdbApiError("not_connected", "Not connected", null)
         val file = File(localPath)
+        cancelRequested = false
         try {
             counting(file).use { k.push(it, remotePath, mode = 420, lastModifiedMs = file.lastModified()) }
         } catch (e: Exception) {
+            // A rider-requested stop isn't a failure: leave the connection up.
+            if (cancelRequested) throw AdbApiError("cancelled", "Cancelled", null)
             dropOnFailure()
             throw AdbApiError("connection_lost", e.message ?: e.javaClass.simpleName, null)
         }
@@ -141,15 +151,24 @@ class AdbBridge(private val context: Context, private val events: AdbEvents) : A
         val file = File(apkPath)
         val total = file.length()
         val counting = counting(file)
+        cancelRequested = false
         try {
             counting.use { k.install(it, total, *options.toTypedArray()) }
             "Success"
+        } catch (e: TransferCancelled) {
+            throw AdbApiError("cancelled", "Cancelled", null)
         } catch (e: IllegalStateException) {
+            if (cancelRequested) throw AdbApiError("cancelled", "Cancelled", null)
             throw AdbApiError("install_failed", e.message ?: "Install failed", null)
         } catch (e: Exception) {
+            if (cancelRequested) throw AdbApiError("cancelled", "Cancelled", null)
             dropOnFailure()
             throw AdbApiError("connection_lost", e.message ?: e.javaClass.simpleName, null)
         }
+    }
+
+    override fun cancelTransfer() {
+        cancelRequested = true
     }
 
     override fun disconnect() {

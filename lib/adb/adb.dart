@@ -32,6 +32,9 @@ abstract class Adb {
   Future<void> install(String apkPath, List<String> options, {void Function(int sent, int total)? onProgress});
   Future<void> push(String localPath, String remotePath, {void Function(int sent, int total)? onProgress});
   Future<void> pull(String remotePath, String localPath);
+
+  /// Abort an in-flight [push]/[install] without dropping the connection.
+  Future<void> cancelTransfer();
   Future<void> disconnect();
 }
 
@@ -118,6 +121,9 @@ class PigeonAdb implements Adb, AdbEvents {
       throw _failure(e);
     }
   }
+
+  @override
+  Future<void> cancelTransfer() => api.cancelTransfer();
 
   @override
   Future<void> disconnect() => api.disconnect();

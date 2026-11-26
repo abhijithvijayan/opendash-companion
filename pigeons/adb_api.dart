@@ -69,6 +69,10 @@ abstract class AdbHostApi {
   @async
   void pull(String remotePath, String localPath);
 
+  /// Aborts an in-flight [push] or [install] without dropping the connection,
+  /// so the rider can stop a transfer and keep working.
+  void cancelTransfer();
+
   void disconnect();
 
   /// This phone's adb public key, in the format `adb_keys` holds.

@@ -247,13 +247,13 @@ class OperationNotifier extends Notifier<OperationState?> {
     await ref.read(connectionProvider.notifier).refresh();
   }
 
-  /// Stop a running operation. Flags it, then drops the adb link so an in-flight
-  /// push/install aborts at once; the connection then reads as lost (reconnect).
+  /// Stop a running operation. Flags it, then aborts the in-flight push/install
+  /// in place (without dropping the connection), so the rider keeps working.
   Future<void> cancel() async {
     final op = _current;
     if (op == null || !running) return;
     op.cancel();
-    await ref.read(adbProvider).disconnect();
+    await ref.read(adbProvider).cancelTransfer();
   }
 
   void clear() {

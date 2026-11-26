@@ -508,6 +508,25 @@ class AdbHostApi {
     ;
   }
 
+  /// Aborts an in-flight [push] or [install] without dropping the connection,
+  /// so the rider can stop a transfer and keep working.
+  Future<void> cancelTransfer() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.opendash_companion.AdbHostApi.cancelTransfer$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
   Future<void> disconnect() async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.opendash_companion.AdbHostApi.disconnect$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(

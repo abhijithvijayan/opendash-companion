@@ -441,6 +441,11 @@ interface AdbHostApi {
   suspend fun push(localPath: String, remotePath: String)
   /** Copies a file from the head unit to the phone. */
   suspend fun pull(remotePath: String, localPath: String)
+  /**
+   * Aborts an in-flight [push] or [install] without dropping the connection,
+   * so the rider can stop a transfer and keep working.
+   */
+  fun cancelTransfer()
   fun disconnect()
   /** This phone's adb public key, in the format `adb_keys` holds. */
   fun publicKey(): String
@@ -598,6 +603,22 @@ interface AdbHostApi {
               }
               reply.reply(wrapped)
             }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.opendash_companion.AdbHostApi.cancelTransfer$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.cancelTransfer()
+              listOf(null)
+            } catch (exception: Throwable) {
+              AdbApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
