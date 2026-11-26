@@ -61,7 +61,7 @@ class _Scooter extends FakeAdb {
       reply = installed ? 'versionCode=$build\nversionName=$version\n' : 'Unable to find package: $kOpenDashPackage\n';
     }
     if (cmd.startsWith('cmd package resolve-activity')) reply = installed ? '$kOpenDashActivity\n' : '$kStockActivity\n';
-    if (cmd.startsWith('wm density')) reply = installed ? 'Physical density: 240\nOverride density: 160\n' : 'Physical density: 240\n';
+    if (cmd.startsWith('wm density')) reply = 'Physical density: 240\n';
     if (cmd.startsWith('pm list packages -3')) reply = installed ? 'package:$kOpenDashPackage\n' : '';
     return ShellReply(output: reply, exitCode: 0);
   }
