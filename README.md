@@ -62,7 +62,7 @@
 ## Features
 
 - **Finds the scooter** on your Wi-Fi, on the scooter's hotspot, or on your phone's hotspot. You can also type its address.
-- **Installs or updates OpenDash** from its GitHub releases. Every download is checked against the release's checksum and OpenDash's release signing key before it goes anywhere near the scooter. It then sets the display density, makes OpenDash the home screen (optional) and starts it.
+- **Installs or updates OpenDash** from its GitHub releases. Every download is checked against the release's checksum and OpenDash's release signing key before it goes anywhere near the scooter. It then makes OpenDash the home screen (optional) and starts it, and puts back the scooter's own display density if an earlier install changed it.
 - **Tells you about updates** each time you open it, with the release notes. You can skip a version.
 - **Installs from a file** too, for builds you made yourself. It warns you when an APK isn't signed with the release key.
 - **Uninstalls OpenDash**, giving the home screen back to the stock dashboard and resetting the display density.

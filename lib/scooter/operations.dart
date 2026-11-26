@@ -130,7 +130,11 @@ Operation installOps(Adb adb, String apkPath, {required bool makeHome, Future<vo
 /// The install steps, reading the APK's path only when the install starts
 /// (a download step before them supplies it).
 List<(OpStep, StepAction)> installSteps(Adb adb, String Function() apkPath, {required bool makeHome}) => [
-      (OpStep('density', 'Set the display density'), shellStep(adb, 'wm density 160')),
+      // The scooter's own density, set for its screen. Installs used to force
+      // 160, which shrank every other app and Android's own screens to about
+      // two thirds; OpenDash scales its canvas to the display either way.
+      // Resetting also undoes that on a scooter installed before.
+      (OpStep('density', "Use the scooter's display density"), shellStep(adb, 'wm density reset')),
       (OpStep('screensaver', 'Turn off the screensaver'),
           _soft(adb, 'settings put secure screensaver_enabled 0', "Couldn't turn off the screensaver.")),
       (OpStep('stop', 'Stop OpenDash'), shellStep(adb, 'am force-stop $kOpenDashPackage')),

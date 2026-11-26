@@ -21,7 +21,7 @@ void main() {
     final adb = FakeAdb(answers: {'cmd package set-home-activity': 'Success', 'am start': 'Status: ok'});
     final steps = await finish(installOps(adb, '/c/o.apk', makeHome: true));
     expect(adb.log, [
-      'wm density 160',
+      'wm density reset',
       'settings put secure screensaver_enabled 0',
       'am force-stop in.abhijithvijayan.opendash',
       'install /c/o.apk -r -g',
