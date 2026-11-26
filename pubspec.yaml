@@ -1,7 +1,7 @@
 name: opendash_companion
 description: "Installs, updates and removes OpenDash on an Ola S1 head unit."
 publish_to: 'none'
-version: 0.2.0-beta.2+3
+version: 0.2.0-beta.3+4
 
 environment:
   sdk: ^3.14.0
