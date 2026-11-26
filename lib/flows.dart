@@ -23,9 +23,19 @@ AccessFallback accessFallbackFor(ProvisionOutcome? provision) => switch (provisi
 
 typedef Inspect = Future<ApkInfo?> Function(String path);
 
+/// Empties the downloads directory. Only one operation runs at a time, so
+/// whatever is in it is left over from one that has ended.
+Future<void> clearDownloads(Directory dir) async {
+  if (!dir.existsSync()) return;
+  for (final f in dir.listSync()) {
+    await f.delete(recursive: true).catchError((_) => f);
+  }
+}
+
 (OpStep, StepAction) _download(http.Client client, Release r, Directory dir, void Function(String) done, Duration idleTimeout) => (
       OpStep('download', 'Download ${r.version}'),
       (step, changed) async {
+        await clearDownloads(dir);
         try {
           done(await download(client, r, dir, (sent, total) {
             step.progress = total == 0 ? null : sent / total;
@@ -62,7 +72,7 @@ Operation githubInstallOps(Adb adb, http.Client client, Release r, Directory dir
     _download(client, r, dir, (p) => path = p, idleTimeout),
     _verify(r, () => path, inspect, kOpenDashCertSha256, kOpenDashPackage),
     ...installSteps(adb, () => path, makeHome: makeHome),
-  ]);
+  ], cleanup: () => clearDownloads(dir));
 }
 
 /// Download an OpenDash release, check it, and leave it in OpenDash's inbox
@@ -103,7 +113,7 @@ Operation sendToScooterOps(Adb adb, http.Client client, Release r, Directory dir
         await shellStep(adb, 'mv $inbox/opendash-release.json.part $inbox/opendash-release.json')(step, changed);
       }
     ),
-  ]);
+  ], cleanup: () => clearDownloads(dir));
 }
 
 /// Download a companion release, check it against the companion's own key,
@@ -114,6 +124,7 @@ Operation companionUpdateOps(http.Client client, Release r, Directory dir,
   return Operation('Updating this app to ${r.version}', [
     _download(client, r, dir, (p) => path = p, const Duration(seconds: 30)),
     _verify(r, () => path, inspect, pinnedCert, kCompanionPackage),
+    // Android's installer has its own copy once handOff returns.
     (OpStep('handoff', 'Open the installer'), (step, changed) => handOff(path)),
-  ]);
+  ], cleanup: () => clearDownloads(dir));
 }

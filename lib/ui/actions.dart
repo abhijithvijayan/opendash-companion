@@ -43,17 +43,41 @@ void sendToScooter(BuildContext context, WidgetRef ref, Release r) => _run(
     sendToScooterOps(ref.read(adbProvider), ref.read(httpProvider), r, ref.read(downloadDirProvider),
         inspect: ref.read(inspectProvider), manual: true));
 
+/// The picker hands over a copy of the rider's file in this app's cache: that
+/// copy is removed when this ends, however it ends. The rider's own file is
+/// never touched.
 Future<void> installFromFile(BuildContext context, WidgetRef ref) async {
   final picked = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: const ['apk']);
   final path = picked?.files.single.path;
-  if (path == null || !context.mounted) return;
+  if (path == null || !context.mounted) {
+    await _clearPicked();
+    return;
+  }
+  var handedOver = false;
+  try {
+    handedOver = await _installPicked(context, ref, path);
+  } finally {
+    if (!handedOver) await _clearPicked();
+  }
+}
+
+Future<void> _clearPicked() async {
+  try {
+    await FilePicker.platform.clearTemporaryFiles();
+  } catch (_) {
+    // Best effort: a cache the system clears anyway.
+  }
+}
+
+/// True once the install has started; it then clears the copy itself.
+Future<bool> _installPicked(BuildContext context, WidgetRef ref, String path) async {
   final verdict = verifyApk(
     fileSha256: await sha256OfFile(path),
     info: await ref.read(inspectProvider)(path),
     pinnedCert: kOpenDashCertSha256,
     expectedPackage: kOpenDashPackage,
   );
-  if (!context.mounted) return;
+  if (!context.mounted) return false;
   switch (verdict) {
     case Rejected(:final why):
       await showDialog<void>(
@@ -63,21 +87,22 @@ Future<void> installFromFile(BuildContext context, WidgetRef ref) async {
                 content: Text(why),
                 actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
               ));
-      return;
+      return false;
     case Unofficial():
       final go = await confirm(context,
           title: 'Not an official build',
           body: "This APK is not signed with OpenDash's release key. Install it only if you built it yourself.",
           confirm: 'Install anyway',
           danger: true);
-      if (!go || !context.mounted) return;
+      if (!go || !context.mounted) return false;
     case Official():
       break;
   }
-  if (!context.mounted) return;
+  if (!context.mounted) return false;
   final ok = await confirm(context, title: 'Install this OpenDash build?', body: kParkedWarning, confirm: 'Install');
-  if (!ok || !context.mounted) return;
-  _run(context, ref, installOps(ref.read(adbProvider), path, makeHome: ref.read(prefsProvider).makeHome));
+  if (!ok || !context.mounted) return false;
+  _run(context, ref, installOps(ref.read(adbProvider), path, makeHome: ref.read(prefsProvider).makeHome, cleanup: _clearPicked));
+  return true;
 }
 
 Future<void> launchOpenDash(BuildContext context, WidgetRef ref, {required bool viaHome}) async {

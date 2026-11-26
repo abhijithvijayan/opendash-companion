@@ -51,10 +51,14 @@ class FakeAdb implements Adb {
   Future<void> push(String localPath, String remotePath, {void Function(int sent, int total)? onProgress}) async {
     log.add('push $localPath $remotePath');
     pushed[remotePath] = localPath;
+    pushedBytes[remotePath] = File(localPath).readAsBytesSync();
     onProgress?.call(10, 10);
   }
 
   final pushed = <String, String>{};
+
+  /// What each push carried, read at the time: the local file may be gone after.
+  final pushedBytes = <String, List<int>>{};
 
   /// Remote path -> contents, served by [pull]. A missing path fails like adb does.
   final Map<String, String> files = {};

@@ -28,6 +28,9 @@ class AdbBridge(private val context: Context, private val events: AdbEvents) : A
 
     init {
         KadbCert.configure(OkioFilePrivateKeyStore(File(context.filesDir, "adbkey").toOkioPath()))
+        // Copies handed to the installer or a share target ([shareable]). Both
+        // have their own copy by the time this app starts again.
+        for (dir in listOf("downloads", "reports")) runCatching { File(context.cacheDir, dir).deleteRecursively() }
     }
 
     override suspend fun connect(host: String, port: Long): ConnectReply = withContext(Dispatchers.IO) {

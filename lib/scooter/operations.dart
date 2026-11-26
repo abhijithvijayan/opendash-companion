@@ -38,11 +38,14 @@ class StepWarning implements Exception {
 }
 
 class Operation {
-  Operation(this.title, List<(OpStep, StepAction)> plan)
+  Operation(this.title, List<(OpStep, StepAction)> plan, {this.cleanup})
       : steps = [for (final p in plan) p.$1],
         _actions = [for (final p in plan) p.$2];
 
   final String title;
+
+  /// Run once the steps are over, whether they finished or failed.
+  final Future<void> Function()? cleanup;
   final List<OpStep> steps;
   final List<StepAction> _actions;
 
@@ -81,6 +84,11 @@ class Operation {
         emit();
         if (step.state == StepState.failed) break;
       }
+      try {
+        await cleanup?.call();
+      } catch (_) {
+        // Cleanup is best effort: it never turns a finished step into a failure.
+      }
       await out.close();
     }();
     return out.stream;
@@ -110,8 +118,8 @@ StepAction _launch(Adb adb, {required bool viaHome}) => (step, changed) async {
       if (r.output.contains('Error') || r.output.contains('Exception')) throw StepError(_firstLine(r.output));
     };
 
-Operation installOps(Adb adb, String apkPath, {required bool makeHome}) =>
-    Operation('Installing OpenDash', installSteps(adb, () => apkPath, makeHome: makeHome));
+Operation installOps(Adb adb, String apkPath, {required bool makeHome, Future<void> Function()? cleanup}) =>
+    Operation('Installing OpenDash', installSteps(adb, () => apkPath, makeHome: makeHome), cleanup: cleanup);
 
 /// The install steps, reading the APK's path only when the install starts
 /// (a download step before them supplies it).

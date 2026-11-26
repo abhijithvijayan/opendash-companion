@@ -96,7 +96,7 @@ void main() {
       'push ${dir.path}/opendash-release.json $inbox/opendash-release.json.part',
       'mv $inbox/opendash-release.json.part $inbox/opendash-release.json',
     ]);
-    final json = File('${dir.path}/opendash-release.json').readAsStringSync();
+    final json = String.fromCharCodes(adb.pushedBytes['$inbox/opendash-release.json.part']!);
     expect(json, contains('"build":2050'));
     expect(json, contains('"sha256":"$_sha"'));
     expect(json, contains('"apk":"o.apk"'));
@@ -105,16 +105,56 @@ void main() {
 
   test('a send the rider asked for says so; one the app made by itself does not', () async {
     final rel = Release(version: '0.2.2', build: 2050, sha256: _sha, apkUrl: 'https://dl/o.apk', apkName: 'o.apk');
-    await sendToScooterOps(FakeAdb(), _client, rel, dir, inspect: (_) async => _info(kOpenDashCertSha256), manual: true).run().last;
-    expect(File('${dir.path}/opendash-release.json').readAsStringSync(), contains('"manual":true'));
-    await sendToScooterOps(FakeAdb(), _client, rel, dir, inspect: (_) async => _info(kOpenDashCertSha256), manual: false).run().last;
-    expect(File('${dir.path}/opendash-release.json').readAsStringSync(), contains('"manual":false'));
+    const sent = '/sdcard/Android/data/in.abhijithvijayan.opendash/files/companion/incoming/opendash-release.json.part';
+    final asked = FakeAdb();
+    await sendToScooterOps(asked, _client, rel, dir, inspect: (_) async => _info(kOpenDashCertSha256), manual: true).run().last;
+    expect(String.fromCharCodes(asked.pushedBytes[sent]!), contains('"manual":true'));
+    final auto = FakeAdb();
+    await sendToScooterOps(auto, _client, rel, dir, inspect: (_) async => _info(kOpenDashCertSha256), manual: false).run().last;
+    expect(String.fromCharCodes(auto.pushedBytes[sent]!), contains('"manual":false'));
   });
 
   test('a send that fails the check never reaches the scooter', () async {
     final adb = FakeAdb();
     await sendToScooterOps(adb, _client, _rel('00'), dir, inspect: (_) async => _info(kOpenDashCertSha256), manual: true).run().last;
     expect(adb.log, isEmpty);
+  });
+
+  group('no APK is left behind', () {
+    List<String> left() => [for (final f in dir.listSync()) f.path];
+
+    test('after an install', () async {
+      await githubInstallOps(FakeAdb(), _client, _rel(_sha), dir, inspect: (_) async => _info(kOpenDashCertSha256), makeHome: true).run().last;
+      expect(left(), isEmpty);
+    });
+
+    test('after an install the scooter refused', () async {
+      final op = githubInstallOps(FakeAdb(installError: InstallFailure('Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]')), _client,
+          _rel(_sha), dir, inspect: (_) async => _info(kOpenDashCertSha256), makeHome: true);
+      await op.run().last;
+      expect(op.failed, isTrue);
+      expect(left(), isEmpty);
+    });
+
+    test('after a send', () async {
+      await sendToScooterOps(FakeAdb(), _client, _rel(_sha), dir, inspect: (_) async => _info(kOpenDashCertSha256), manual: true).run().last;
+      expect(left(), isEmpty);
+    });
+
+    test('after the companion update is handed to Android, which has read it by then', () async {
+      var existed = false;
+      await companionUpdateOps(_client, _rel(_sha), dir,
+          inspect: (_) async => ApkInfo(packageName: kCompanionPackage, versionName: '0.2.2', versionCode: 2050, certSha256: ['aa']),
+          pinnedCert: 'aa', handOff: (p) async => existed = File(p).existsSync()).run().last;
+      expect(existed, isTrue);
+      expect(left(), isEmpty);
+    });
+
+    test('leftovers from an earlier download are cleared by the next one', () async {
+      File('${dir.path}/opendash-0.1.0.apk').writeAsBytesSync([1]);
+      await githubInstallOps(FakeAdb(), _client, _rel(_sha), dir, inspect: (_) async => _info(kOpenDashCertSha256), makeHome: true).run().last;
+      expect(left(), isEmpty);
+    });
   });
 
   test('access fallback: attempted-and-refused is sealed, otherwise copy-key', () {

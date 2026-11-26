@@ -7,6 +7,16 @@ import 'fake_adb.dart';
 Future<List<OpStep>> finish(Operation op) => op.run().last;
 
 void main() {
+  test('an install from a file cleans up after itself, also when the install fails', () async {
+    var cleaned = 0;
+    await finish(installOps(FakeAdb(), '/c/o.apk', makeHome: false, cleanup: () async => cleaned++));
+    final failed = installOps(FakeAdb(installError: const InstallFailure('Failure [INSTALL_FAILED_INVALID_APK]')), '/c/o.apk',
+        makeHome: false, cleanup: () async => cleaned++);
+    await finish(failed);
+    expect(failed.failed, isTrue);
+    expect(cleaned, 2);
+  });
+
   test('install runs the steps in order', () async {
     final adb = FakeAdb(answers: {'cmd package set-home-activity': 'Success', 'am start': 'Status: ok'});
     final steps = await finish(installOps(adb, '/c/o.apk', makeHome: true));
