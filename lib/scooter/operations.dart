@@ -18,6 +18,12 @@ class OpStep {
   /// 0..1 while bytes are moving, else null.
   double? progress;
 
+  Operation? _op;
+
+  /// The rider asked to stop. A long step (a download) polls this to bail
+  /// promptly instead of running to completion before the next-step check.
+  bool get cancelled => _op?.cancelled ?? false;
+
   OpStep copy() => OpStep(id, label)
     ..state = state
     ..detail = detail
@@ -42,7 +48,11 @@ typedef ManualRoute = ({String url, String hint});
 class Operation {
   Operation(this.title, List<(OpStep, StepAction)> plan, {this.cleanup, this.manual})
       : steps = [for (final p in plan) p.$1],
-        _actions = [for (final p in plan) p.$2];
+        _actions = [for (final p in plan) p.$2] {
+    for (final s in steps) {
+      s._op = this;
+    }
+  }
 
   final String title;
 

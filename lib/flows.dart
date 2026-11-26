@@ -51,7 +51,7 @@ Future<void> clearDownloads(Directory dir) async {
           done(await download(client, r, dir, (sent, total) {
             step.progress = total == 0 ? null : sent / total;
             changed();
-          }, idleTimeout: idleTimeout));
+          }, idleTimeout: idleTimeout, isCancelled: () => step.cancelled));
         } on TimeoutException {
           throw const StepError('The download stopped. Check the internet connection.');
         } on IOException catch (e) {

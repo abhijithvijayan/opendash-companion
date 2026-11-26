@@ -66,6 +66,13 @@ void main() {
     expect(steps.single.state, StepState.failed);
   });
 
+  test('a step can see that its operation was cancelled (so long work can bail)', () {
+    final op = Operation('t', [(OpStep('a', 'A'), (s, ch) async {})]);
+    expect(op.steps.single.cancelled, isFalse);
+    op.cancel();
+    expect(op.steps.single.cancelled, isTrue);
+  });
+
   test('cancelling an operation stops it and leaves the remaining steps unrun', () async {
     late Operation op;
     op = Operation('t', [

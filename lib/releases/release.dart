@@ -104,8 +104,13 @@ bool offerUpdate(Release r, {required int? installedBuild, int skippedBuild = 0}
 
 /// Throws [TimeoutException] when nothing arrives for [idleTimeout]: a
 /// hotspot whose upstream died keeps the socket open and sends nothing.
+/// Thrown by [download] when the rider cancels mid-transfer.
+class DownloadCancelled implements Exception {
+  const DownloadCancelled();
+}
+
 Future<String> download(http.Client client, Release r, Directory dir, void Function(int sent, int total) onProgress,
-    {Duration idleTimeout = const Duration(seconds: 30)}) async {
+    {Duration idleTimeout = const Duration(seconds: 30), bool Function()? isCancelled}) async {
   await dir.create(recursive: true);
   final req = http.Request('GET', Uri.parse(r.apkUrl))..headers['User-Agent'] = kUserAgent;
   final res = await client.send(req).timeout(idleTimeout);
@@ -116,6 +121,7 @@ Future<String> download(http.Client client, Release r, Directory dir, void Funct
   var sent = 0;
   try {
     await for (final chunk in res.stream.timeout(idleTimeout)) {
+      if (isCancelled?.call() ?? false) throw const DownloadCancelled();
       sink.add(chunk);
       sent += chunk.length;
       onProgress(sent, total);

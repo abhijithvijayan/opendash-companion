@@ -290,6 +290,14 @@ class _BackgroundSend extends ConsumerWidget {
             width: double.infinity,
             child: LinearProgressIndicator(value: current?.progress, minHeight: 6, borderRadius: BorderRadius.circular(4)),
           ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => ref.read(operationProvider.notifier).cancel(),
+              icon: const Icon(Icons.stop_circle_outlined, size: 18),
+              label: const Text('Stop'),
+            ),
+          ),
         ],
       );
     } else if (failed != null) {
