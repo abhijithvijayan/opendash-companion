@@ -19,6 +19,7 @@ dependencies:
   archive: ^4.7.1
   workmanager: ^0.10.10
   flutter_local_notifications: ^23.0.4
+  nsd: ^5.0.1
 
 dev_dependencies:
   flutter_test:
