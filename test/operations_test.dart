@@ -21,7 +21,6 @@ void main() {
     final adb = FakeAdb(answers: {'cmd package set-home-activity': 'Success', 'am start': 'Status: ok'});
     final steps = await finish(installOps(adb, '/c/o.apk', makeHome: true));
     expect(adb.log, [
-      'wm density reset',
       'settings put secure screensaver_enabled 0',
       'am force-stop in.abhijithvijayan.opendash',
       'install /c/o.apk -r -g',
@@ -143,15 +142,15 @@ void main() {
     expect(steps.firstWhere((s) => s.id == 'launch').state, StepState.done);
   });
 
-  test('uninstall gives home back, starts stock, uninstalls, resets density', () async {
+  test('uninstall gives home back, starts stock, uninstalls — and leaves density alone', () async {
     final adb = FakeAdb(answers: {'pm uninstall': 'Success', 'cmd package set-home-activity': 'Success'});
     final steps = await finish(uninstallOps(adb));
     expect(adb.log, [
       'cmd package set-home-activity com.olaelectric.hmiclient/.MainActivity',
       'am start -W -n com.olaelectric.hmiclient/.MainActivity',
       'pm uninstall in.abhijithvijayan.opendash',
-      'wm density reset',
     ]);
+    expect(adb.log.any((l) => l.contains('density')), isFalse);
     expect(steps.every((s) => s.state == StepState.done), isTrue);
   });
 

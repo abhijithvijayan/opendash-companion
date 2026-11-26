@@ -134,7 +134,7 @@ Future<void> forgetPriorModeIfUninstalled(Operation op, Prefs prefs, String? key
 Future<void> uninstallOpenDash(BuildContext context, WidgetRef ref) async {
   final ok = await confirm(context,
       title: 'Uninstall OpenDash?',
-      body: '$kParkedWarning\n\nThe stock dashboard becomes the home screen again and the display density is reset.\n\n$_uninstallNote',
+      body: '$kParkedWarning\n\nThe stock dashboard becomes the home screen again.\n\n$_uninstallNote',
       confirm: 'Uninstall',
       danger: true);
   if (!ok || !context.mounted) return;

@@ -62,10 +62,10 @@
 ## Features
 
 - **Finds the scooter** on your Wi-Fi, on the scooter's hotspot, or on your phone's hotspot. You can also type its address.
-- **Installs or updates OpenDash** from its GitHub releases. Every download is checked against the release's checksum and OpenDash's release signing key before it goes anywhere near the scooter. It then makes OpenDash the home screen (optional) and starts it, and puts back the scooter's own display density if an earlier install changed it.
+- **Installs or updates OpenDash** from its GitHub releases. Every download is checked against the release's checksum and OpenDash's release signing key before it goes anywhere near the scooter. It then makes OpenDash the home screen (optional) and starts it. It leaves the scooter's display density alone.
 - **Tells you about updates** each time you open it, with the release notes. You can skip a version.
 - **Installs from a file** too, for builds you made yourself. It warns you when an APK isn't signed with the release key.
-- **Uninstalls OpenDash**, giving the home screen back to the stock dashboard and resetting the display density.
+- **Uninstalls OpenDash**, giving the home screen back to the stock dashboard.
 - **Shows the other apps** installed on the scooter on top of the stock software, and lets you remove any you don't trust.
 - **Refuses anything that isn't an Ola head unit**, so it can't change the wrong device.
 - **Updates itself** from this repository's releases, through Android's own installer.

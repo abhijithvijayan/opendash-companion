@@ -154,11 +154,11 @@ Operation installOps(Adb adb, String apkPath, {required bool makeHome, Future<vo
 /// The install steps, reading the APK's path only when the install starts
 /// (a download step before them supplies it).
 List<(OpStep, StepAction)> installSteps(Adb adb, String Function() apkPath, {required bool makeHome}) => [
-      // The scooter's own density, set for its screen. Installs used to force
-      // 160, which shrank every other app and Android's own screens to about
-      // two thirds; OpenDash scales its canvas to the display either way.
-      // Resetting also undoes that on a scooter installed before.
-      (OpStep('density', "Use the scooter's display density"), shellStep(adb, 'wm density reset')),
+      // The display density is left alone. The stock software sets it as an
+      // override for the scooter's screen (e.g. 236 dpi) and re-applies it on
+      // boot; OpenDash scales its canvas to the display at any density. Touching
+      // it (`wm density reset` dropped the override to the much larger physical
+      // density) only blew up every other app and Android's own screens.
       (OpStep('screensaver', 'Turn off the screensaver'),
           _soft(adb, 'settings put secure screensaver_enabled 0', "Couldn't turn off the screensaver.")),
       (OpStep('stop', 'Stop OpenDash'), shellStep(adb, 'am force-stop $kOpenDashPackage')),
@@ -213,7 +213,6 @@ Operation uninstallOps(Adb adb, {String? host, String? priorMode}) => Operation(
       ),
       (OpStep('stock', 'Start the stock dashboard'), _soft(adb, 'am start -W -n $kStockActivity', "Couldn't start the stock dashboard; it starts on the next boot.")),
       (OpStep('uninstall', 'Uninstall OpenDash'), _pmUninstall(adb, kOpenDashPackage)),
-      (OpStep('density', 'Reset the display density'), shellStep(adb, 'wm density reset')),
       if (host != null && priorMode != null && priorMode != 'mfg')
         (OpStep('mode', "Restore the scooter's previous mode"), _restoreMode(adb, host, priorMode)),
     ]);
