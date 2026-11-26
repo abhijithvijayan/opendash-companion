@@ -115,6 +115,8 @@ jobs:
       - name: Build and sign
         env:
           COMPANION_CERT_SHA256: ${{ vars.COMPANION_CERT_SHA256 }}
+          # Where this app updates itself from: the repository it is released from.
+          COMPANION_REPO: ${{ github.repository }}
         run: scripts/release.sh "$VERSION"
 
       - name: Remove the signing key

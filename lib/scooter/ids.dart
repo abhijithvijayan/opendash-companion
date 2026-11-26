@@ -1,5 +1,8 @@
 const kOpenDashRepo = 'abhijithvijayan/opendash';
-const kCompanionRepo = 'abhijithvijayan/opendash-companion';
+/// This app's own releases, which it updates itself from and links to. The
+/// release workflow passes the repository it runs in (`COMPANION_REPO`), so
+/// a fork's app follows the fork's releases; any other build follows these.
+const kCompanionRepo = String.fromEnvironment('COMPANION_REPO', defaultValue: 'abhijithvijayan/opendash-companion');
 
 /// Set by scripts/release.sh. 0 on a dev build, which never offers itself an update.
 const kCompanionBuild = int.fromEnvironment('COMPANION_BUILD');
