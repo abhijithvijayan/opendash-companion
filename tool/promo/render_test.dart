@@ -39,7 +39,7 @@ const dpr = 2.625;
 final version = RegExp(r'^version:\s*([0-9.]+)', multiLine: true)
         .firstMatch(File('../opendash/pubspec.yaml').readAsStringSync())!
         .group(1)!;
-final build = int.parse(Process.runSync('scripts/build-number.sh', [version], workingDirectory: '../opendash').stdout.toString().trim());
+final build = int.parse(Process.runSync('bash', ['scripts/build-number.sh', version], workingDirectory: '../opendash').stdout.toString().trim());
 const out = 'build/promo/frames';
 
 /// A scooter with the stock dashboard and no OpenDash, until the install.
@@ -97,6 +97,8 @@ Future<void> _loadFonts() async {
 
 void main() {
   testWidgets('film the install flow', timeout: Timeout.none, (t) async {
+    // ignore: avoid_print
+    print('installing OpenDash $version, build $build');
     await _loadFonts();
     t.view.physicalSize = phone;
     t.view.devicePixelRatio = dpr;
@@ -128,6 +130,7 @@ void main() {
     if (dir.existsSync()) dir.deleteSync(recursive: true);
     dir.createSync(recursive: true);
     final taps = File('build/promo/taps.json');
+    if (taps.existsSync()) taps.deleteSync();
     final tapLog = <Map<String, Object>>[];
     var frame = 0;
 
