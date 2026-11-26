@@ -28,6 +28,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -87,6 +88,10 @@ dependencies {
     implementation("com.google.protobuf:protobuf-kotlin-lite:3.25.3")
     // Required by generated gRPC Java stubs (@javax.annotation.Generated).
     compileOnly("javax.annotation:javax.annotation-api:1.3.2")
+
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
 }
 
 protobuf {
