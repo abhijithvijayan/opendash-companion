@@ -284,7 +284,13 @@ class _BackgroundSend extends ConsumerWidget {
       notice = Notice(
         icon: Icons.send_to_mobile_outlined,
         title: op.title,
-        body: current?.label,
+        // Make clear this only stages the update (OpenDash installs it from the
+        // dashboard) — not an install in progress — and show the byte percentage.
+        body: [
+          "You'll install it from the scooter's dashboard.",
+          if (current != null)
+            current.progress == null ? current.label : '${current.label} · ${(current.progress! * 100).round()}%',
+        ].join('\n'),
         actions: [
           SizedBox(
             width: double.infinity,
