@@ -186,8 +186,12 @@ final skippedOpenDashProvider = NotifierProvider<SkipNotifier, int>(() => SkipNo
 final skippedCompanionProvider = NotifierProvider<SkipNotifier, int>(() => SkipNotifier(true));
 
 class OperationState {
-  const OperationState(this.title, this.steps, {required this.running, this.background = false, this.manual});
+  const OperationState(this.title, this.steps,
+      {required this.running, this.background = false, this.manual, this.cancelled = false});
   final String title;
+
+  /// The rider stopped it.
+  final bool cancelled;
 
   /// [Operation.manual]: offered once it has failed.
   final ManualRoute? manual;
@@ -207,15 +211,29 @@ class OperationNotifier extends Notifier<OperationState?> {
 
   bool get running => state?.running ?? false;
 
+  Operation? _current;
+
   Future<void> start(Operation op, {bool background = false}) async {
     if (running) return;
+    _current = op;
     state = OperationState(op.title, op.steps, running: true, background: background, manual: op.manual);
     await for (final steps in op.run()) {
       state = OperationState(op.title, steps, running: true, background: background, manual: op.manual);
     }
-    state = OperationState(op.title, state!.steps, running: false, background: background, manual: op.manual);
+    state = OperationState(op.title, state!.steps,
+        running: false, background: background, manual: op.manual, cancelled: op.cancelled);
+    _current = null;
     ref.read(appLogProvider).add(describeOperation(op.title, state!.steps, background: background));
     await ref.read(connectionProvider.notifier).refresh();
+  }
+
+  /// Stop a running operation. Flags it, then drops the adb link so an in-flight
+  /// push/install aborts at once; the connection then reads as lost (reconnect).
+  Future<void> cancel() async {
+    final op = _current;
+    if (op == null || !running) return;
+    op.cancel();
+    await ref.read(adbProvider).disconnect();
   }
 
   void clear() {

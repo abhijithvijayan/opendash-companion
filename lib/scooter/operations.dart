@@ -5,7 +5,7 @@ import 'ids.dart';
 import 'parse.dart';
 import 'pm_errors.dart';
 
-enum StepState { waiting, running, done, warning, failed }
+enum StepState { waiting, running, done, warning, failed, cancelled }
 
 class OpStep {
   OpStep(this.id, this.label);
@@ -55,6 +55,13 @@ class Operation {
   final List<OpStep> steps;
   final List<StepAction> _actions;
 
+  bool _cancelled = false;
+
+  /// The rider asked to stop. [run] stops before the next step; the operation
+  /// aborts the in-flight step by dropping the adb link (the caller's job).
+  bool get cancelled => _cancelled;
+  void cancel() => _cancelled = true;
+
   bool get failed => steps.any((s) => s.state == StepState.failed);
 
   /// Snapshots of every step after each change; the last one is final.
@@ -64,6 +71,7 @@ class Operation {
     () async {
       emit();
       for (var i = 0; i < steps.length; i++) {
+        if (_cancelled) break;
         final step = steps[i];
         step.state = StepState.running;
         emit();
@@ -86,9 +94,15 @@ class Operation {
           step.state = StepState.failed;
           step.detail = 'Something went wrong: $e';
         }
+        // A step that failed because the rider cancelled (the link was dropped
+        // mid-step) reads as cancelled, not as an error.
+        if (_cancelled && step.state == StepState.failed) {
+          step.state = StepState.cancelled;
+          step.detail = null;
+        }
         step.progress = null;
         emit();
-        if (step.state == StepState.failed) break;
+        if (step.state == StepState.failed || step.state == StepState.cancelled) break;
       }
       try {
         await cleanup?.call();
