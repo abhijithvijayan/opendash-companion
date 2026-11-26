@@ -53,7 +53,9 @@ echo "=== Building OpenDash Companion $VERSION, build $BUILD, commit $GIT_SHA ==
 flutter build apk --release --build-number="$BUILD" \
   --dart-define=COMPANION_BUILD="$BUILD" --dart-define=COMPANION_VERSION="$VERSION" \
   --dart-define=COMPANION_CERT_SHA256="$PIN" \
-  --dart-define=COMPANION_REPO="${COMPANION_REPO:-abhijithvijayan/opendash-companion}"
+  --dart-define=COMPANION_REPO="${COMPANION_REPO:-abhijithvijayan/opendash-companion}" \
+  --dart-define=OPENDASH_REPO="${OPENDASH_REPO:-abhijithvijayan/opendash}" \
+  --dart-define=OPENDASH_CERT_SHA256="${OPENDASH_CERT_SHA256:-25f012a33b86ab2365b480b594998a131fa8e0edc3768c9e258440f98d4ba7ee}"
 
 mkdir -p dist
 rm -f dist/opendash-companion-*.apk dist/companion-release.json

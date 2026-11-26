@@ -1,4 +1,8 @@
-const kOpenDashRepo = 'abhijithvijayan/opendash';
+/// The OpenDash this app installs, and the key its releases must be signed
+/// with ([kOpenDashCertSha256]). They go together: a fork of both apps sets
+/// both (repository variables OPENDASH_REPO and OPENDASH_CERT_SHA256);
+/// otherwise this project's OpenDash.
+const kOpenDashRepo = String.fromEnvironment('OPENDASH_REPO', defaultValue: 'abhijithvijayan/opendash');
 /// This app's own releases, which it updates itself from and links to. The
 /// release workflow passes the repository it runs in (`COMPANION_REPO`), so
 /// a fork's app follows the fork's releases; any other build follows these.
@@ -25,7 +29,8 @@ const kDiagnosticsPort = 50005;
 const kOpenDashLogDir = '/sdcard/Android/data/$kOpenDashPackage/files/analytics';
 
 /// SHA-256 of the certificate every official OpenDash release is signed with.
-const kOpenDashCertSha256 = '25f012a33b86ab2365b480b594998a131fa8e0edc3768c9e258440f98d4ba7ee';
+const kOpenDashCertSha256 =
+    String.fromEnvironment('OPENDASH_CERT_SHA256', defaultValue: '25f012a33b86ab2365b480b594998a131fa8e0edc3768c9e258440f98d4ba7ee');
 
 /// The scooter's own software, never offered for removal. Most of it is
 /// system apps that `pm list packages -3` leaves out anyway; this guards the
