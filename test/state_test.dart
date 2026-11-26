@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opendash_companion/adb/adb.dart';
+import 'package:opendash_companion/scooter/operations.dart';
 import 'package:opendash_companion/state/prefs.dart';
 import 'package:opendash_companion/state/providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -156,6 +159,20 @@ void main() {
     expect(c.read(prefsProvider).skippedOpenDash, 2050);
   });
 
+  test('cancelling a running operation drops the link and marks it cancelled', () async {
+    final adb = _HangingPush();
+    final c = await make(adb: adb);
+    final n = c.read(operationProvider.notifier);
+    final op = Operation('t', [(OpStep('send', 'Send'), (s, ch) => adb.push('/a', '/b'))]);
+    final run = n.start(op);
+    await pumpEventQueue();
+    await n.cancel();
+    await run;
+    expect(adb.disconnected, isTrue);
+    expect(c.read(operationProvider)!.cancelled, isTrue);
+    expect(c.read(operationProvider)!.steps.single.state, StepState.cancelled);
+  });
+
   group('normalizeHost', () {
     test('drops the adb port people copy from `adb connect`', () {
       expect(normalizeHost(' 192.168.1.42:5555 '), '192.168.1.42');
@@ -178,6 +195,22 @@ void main() {
 class _Refusing extends FakeAdb {
   @override
   Future<ConnectOutcome> connect(String host) async => ConnectOutcome.unauthorized;
+}
+
+/// A push that hangs until the link is dropped, like a real transfer the rider
+/// interrupts. [disconnect] releases it with a connection error.
+class _HangingPush extends FakeAdb {
+  final _gate = Completer<void>();
+  bool disconnected = false;
+
+  @override
+  Future<void> push(String localPath, String remotePath, {void Function(int sent, int total)? onProgress}) => _gate.future;
+
+  @override
+  Future<void> disconnect() async {
+    disconnected = true;
+    if (!_gate.isCompleted) _gate.completeError(const AdbFailure('Lost the connection to the scooter.'));
+  }
 }
 
 class _Recording extends FakeAdb {

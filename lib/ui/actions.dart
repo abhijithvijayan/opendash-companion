@@ -111,6 +111,14 @@ Future<void> launchOpenDash(BuildContext context, WidgetRef ref, {required bool 
   _run(context, ref, launchOps(ref.read(adbProvider), viaHome: viaHome));
 }
 
+/// Brings the stock Ola dashboard back — the recovery for a white screen after a
+/// restart with no OpenDash. [viaHome] is true when the stock dash is the home app.
+Future<void> launchStockDash(BuildContext context, WidgetRef ref, {required bool viaHome}) async {
+  final ok = await confirm(context, title: 'Start the stock dashboard?', body: kParkedWarning, confirm: 'Start');
+  if (!ok || !context.mounted) return;
+  _run(context, ref, launchStockOps(ref.read(adbProvider), viaHome: viaHome));
+}
+
 /// Force-stop + relaunch (launchOps does a fresh-Surface start), to recover a crashed or white-screened dashboard.
 Future<void> restartOpenDash(BuildContext context, WidgetRef ref, {required bool viaHome}) async {
   final ok = await confirm(context, title: 'Restart OpenDash?', body: kParkedWarning, confirm: 'Restart');

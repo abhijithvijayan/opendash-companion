@@ -25,7 +25,7 @@ class ProgressScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
                 children: [
-                  _Headline(running: running, failed: op.failed, warned: warned),
+                  _Headline(running: running, failed: op.failed, warned: warned, cancelled: op.cancelled),
                   const SizedBox(height: 20),
                   Card(
                     child: Column(children: [
@@ -56,15 +56,19 @@ class ProgressScreen extends ConsumerWidget {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: FilledButton(
-                onPressed: running
-                    ? null
-                    : () {
+              child: running
+                  ? OutlinedButton.icon(
+                      onPressed: () => ref.read(operationProvider.notifier).cancel(),
+                      icon: const Icon(Icons.stop_circle_outlined),
+                      label: const Text('Cancel'),
+                    )
+                  : FilledButton(
+                      onPressed: () {
                         ref.read(operationProvider.notifier).clear();
                         Navigator.of(context).pop();
                       },
-                child: Text(running ? 'Working…' : 'Done'),
-              ),
+                      child: const Text('Done'),
+                    ),
             ),
           ]),
         ),
@@ -74,19 +78,21 @@ class ProgressScreen extends ConsumerWidget {
 }
 
 class _Headline extends StatelessWidget {
-  const _Headline({required this.running, required this.failed, required this.warned});
-  final bool running, failed, warned;
+  const _Headline({required this.running, required this.failed, required this.warned, required this.cancelled});
+  final bool running, failed, warned, cancelled;
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
     final (icon, color, text) = running
         ? (Icons.sync_rounded, t.colorScheme.primary, 'Working on your scooter')
-        : failed
-            ? (Icons.error_outline_rounded, t.colorScheme.error, "That didn't finish")
-            : warned
-                ? (Icons.check_circle_outline_rounded, t.colorScheme.tertiary, 'Done, with a note')
-                : (Icons.check_circle_rounded, t.colorScheme.primary, 'All done');
+        : cancelled
+            ? (Icons.stop_circle_outlined, t.colorScheme.onSurfaceVariant, 'Stopped')
+            : failed
+                ? (Icons.error_outline_rounded, t.colorScheme.error, "That didn't finish")
+                : warned
+                    ? (Icons.check_circle_outline_rounded, t.colorScheme.tertiary, 'Done, with a note')
+                    : (Icons.check_circle_rounded, t.colorScheme.primary, 'All done');
     return Row(children: [
       Container(
         width: 48,
@@ -114,6 +120,7 @@ class _StepRow extends StatelessWidget {
       StepState.done => Icon(Icons.check_circle_rounded, color: cs.primary),
       StepState.warning => Icon(Icons.warning_amber_rounded, color: cs.tertiary),
       StepState.failed => Icon(Icons.cancel_rounded, color: cs.error),
+      StepState.cancelled => Icon(Icons.remove_circle_outline_rounded, color: cs.onSurfaceVariant),
     };
     final detailColor = step.state == StepState.failed ? cs.error : cs.tertiary;
     return Padding(

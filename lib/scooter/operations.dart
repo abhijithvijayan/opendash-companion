@@ -5,7 +5,7 @@ import 'ids.dart';
 import 'parse.dart';
 import 'pm_errors.dart';
 
-enum StepState { waiting, running, done, warning, failed }
+enum StepState { waiting, running, done, warning, failed, cancelled }
 
 class OpStep {
   OpStep(this.id, this.label);
@@ -55,6 +55,13 @@ class Operation {
   final List<OpStep> steps;
   final List<StepAction> _actions;
 
+  bool _cancelled = false;
+
+  /// The rider asked to stop. [run] stops before the next step; the operation
+  /// aborts the in-flight step by dropping the adb link (the caller's job).
+  bool get cancelled => _cancelled;
+  void cancel() => _cancelled = true;
+
   bool get failed => steps.any((s) => s.state == StepState.failed);
 
   /// Snapshots of every step after each change; the last one is final.
@@ -64,6 +71,7 @@ class Operation {
     () async {
       emit();
       for (var i = 0; i < steps.length; i++) {
+        if (_cancelled) break;
         final step = steps[i];
         step.state = StepState.running;
         emit();
@@ -86,9 +94,15 @@ class Operation {
           step.state = StepState.failed;
           step.detail = 'Something went wrong: $e';
         }
+        // A step that failed because the rider cancelled (the link was dropped
+        // mid-step) reads as cancelled, not as an error.
+        if (_cancelled && step.state == StepState.failed) {
+          step.state = StepState.cancelled;
+          step.detail = null;
+        }
         step.progress = null;
         emit();
-        if (step.state == StepState.failed) break;
+        if (step.state == StepState.failed || step.state == StepState.cancelled) break;
       }
       try {
         await cleanup?.call();
@@ -115,12 +129,12 @@ StepAction _soft(Adb adb, String cmd, String warning) => (step, changed) async {
 
 /// Wake the display, force-stop, then relaunch. Via the HOME intent Android hands the app a fresh Surface,
 /// which clears the Kanzi white-screen halt; otherwise start the activity directly.
-StepAction _launch(Adb adb, {required bool viaHome}) => (step, changed) async {
+StepAction _launch(Adb adb, {required String package, required String activity, required bool viaHome}) => (step, changed) async {
       await adb.shell('input keyevent KEYCODE_WAKEUP');
-      await adb.shell('am force-stop $kOpenDashPackage');
+      await adb.shell('am force-stop $package');
       final r = await adb.shell(viaHome
           ? 'am start -a android.intent.action.MAIN -c android.intent.category.HOME'
-          : 'am start -S -W -n $kOpenDashActivity');
+          : 'am start -S -W -n $activity');
       if (r.output.contains('Error') || r.output.contains('Exception')) throw StepError(_firstLine(r.output));
     };
 
@@ -151,11 +165,22 @@ List<(OpStep, StepAction)> installSteps(Adb adb, String Function() apkPath, {req
           _soft(adb, 'cmd package set-home-activity $kOpenDashActivity',
               "Couldn't make it the home screen. Pick OpenDash when the scooter asks which home app to use.")
         ),
-      (OpStep('launch', 'Start OpenDash'), _launch(adb, viaHome: makeHome)),
+      (OpStep('launch', 'Start OpenDash'), _launch(adb, package: kOpenDashPackage, activity: kOpenDashActivity, viaHome: makeHome)),
     ];
 
 Operation launchOps(Adb adb, {required bool viaHome}) =>
-    Operation('Starting OpenDash', [(OpStep('launch', 'Start OpenDash'), _launch(adb, viaHome: viaHome))]);
+    Operation('Starting OpenDash', [
+      (OpStep('launch', 'Start OpenDash'), _launch(adb, package: kOpenDashPackage, activity: kOpenDashActivity, viaHome: viaHome))
+    ]);
+
+/// Brings the stock Ola dashboard back — the recovery for a white screen after
+/// a restart with no OpenDash installed. Same wake → force-stop → HOME-intent
+/// sequence; [viaHome] is true when the stock dash is the home app (it is
+/// whenever OpenDash isn't the home screen).
+Operation launchStockOps(Adb adb, {required bool viaHome}) =>
+    Operation('Starting the stock dashboard', [
+      (OpStep('launch', 'Start the stock dashboard'), _launch(adb, package: kStockPackage, activity: kStockActivity, viaHome: viaHome))
+    ]);
 
 StepAction _pmUninstall(Adb adb, String pkg) => (step, changed) async {
       final r = await adb.shell('pm uninstall $pkg');

@@ -155,6 +155,17 @@ class _Body extends ConsumerWidget {
             _ => const SizedBox.shrink(),
           },
           const SectionLabel('OpenDash'),
+          // When the stock dash is the home app (always so when OpenDash isn't
+          // installed), offer to relaunch it — the fix for a white screen after
+          // a restart. The HOME intent gives it a fresh Surface.
+          if (!status.openDashIsHome) ...[
+            OutlinedButton.icon(
+              onPressed: enabled ? () => launchStockDash(context, ref, viaHome: true) : null,
+              icon: const Icon(Icons.dashboard_customize_outlined),
+              label: const Text('Launch stock dashboard'),
+            ),
+            const SizedBox(height: 10),
+          ],
           if (!installed && latest != null) ...[
             FilledButton.icon(
               onPressed: enabled ? () => installFromGitHub(context, ref, latest, update: false) : null,

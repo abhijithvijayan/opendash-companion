@@ -66,6 +66,52 @@ void main() {
     expect(steps.single.state, StepState.failed);
   });
 
+  test('cancelling an operation stops it and leaves the remaining steps unrun', () async {
+    late Operation op;
+    op = Operation('t', [
+      (OpStep('a', 'A'), (step, changed) async => op.cancel()),
+      (OpStep('b', 'B'), (step, changed) async => fail('must not run after cancel')),
+    ]);
+    final steps = await op.run().last;
+    expect(op.cancelled, isTrue);
+    expect(steps.firstWhere((s) => s.id == 'b').state, StepState.waiting);
+  });
+
+  test('a step that fails because of a cancel is marked cancelled, not failed', () async {
+    late Operation op;
+    op = Operation('t', [
+      (OpStep('a', 'A'), (step, changed) async {
+        op.cancel();
+        throw const AdbFailure('Lost the connection to the scooter.');
+      }),
+    ]);
+    final steps = await op.run().last;
+    expect(steps.single.state, StepState.cancelled);
+    expect(steps.single.detail, isNull);
+  });
+
+  test('launch stock dash via home wakes, force-stops stock, then fires the HOME intent', () async {
+    final adb = FakeAdb(answers: {'am start': 'Starting: Intent { act=android.intent.action.MAIN }'});
+    final steps = await finish(launchStockOps(adb, viaHome: true));
+    expect(adb.log, [
+      'input keyevent KEYCODE_WAKEUP',
+      'am force-stop com.olaelectric.hmiclient',
+      'am start -a android.intent.action.MAIN -c android.intent.category.HOME',
+    ]);
+    expect(steps.single.state, StepState.done);
+  });
+
+  test('launch stock dash directly when the stock dash is not the home app', () async {
+    final adb = FakeAdb(answers: {'am start': 'Status: ok'});
+    final steps = await finish(launchStockOps(adb, viaHome: false));
+    expect(adb.log, [
+      'input keyevent KEYCODE_WAKEUP',
+      'am force-stop com.olaelectric.hmiclient',
+      'am start -S -W -n com.olaelectric.hmiclient/.MainActivity',
+    ]);
+    expect(steps.single.state, StepState.done);
+  });
+
   test('launch via home wakes, force-stops, then fires the HOME intent', () async {
     final adb = FakeAdb(answers: {'am start': 'Starting: Intent { act=android.intent.action.MAIN }'});
     final steps = await finish(launchOps(adb, viaHome: true));
