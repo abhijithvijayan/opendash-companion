@@ -6,9 +6,9 @@ import '../state/providers.dart';
 const _points = [
   (Icons.build_circle_outlined, 'This installs software on a scooter you own, over adb. It may affect your warranty.'),
   (Icons.local_parking_rounded, 'Install and uninstall only while the scooter is parked — the dashboard restarts.'),
-  (Icons.info_outline_rounded, 'OpenDash and this app are not made by Ola.'),
+  (Icons.info_outline_rounded, 'S1 Dash and this app are not made by Ola.'),
   (Icons.verified_user_outlined,
-      "This app checks every OpenDash download against its release key. It can't vouch for other apps on your scooter; you can remove them here."),
+      "This app checks every S1 Dash download against its release key. It can't vouch for other apps on your scooter; you can remove them here."),
 ];
 
 /// The one-time acknowledgement. With [readOnly] it is shown again from About.
@@ -43,7 +43,7 @@ class _AckScreenState extends ConsumerState<AckScreen> {
               ),
               ),
               const SizedBox(height: 20),
-              Text('OpenDash Companion', style: t.textTheme.labelLarge?.copyWith(color: t.colorScheme.primary, fontWeight: FontWeight.w700)),
+              Text('S1 Dash Companion', style: t.textTheme.labelLarge?.copyWith(color: t.colorScheme.primary, fontWeight: FontWeight.w700)),
               const SizedBox(height: 6),
             ],
             Text('Before you start', style: t.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5)),

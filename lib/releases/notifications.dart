@@ -17,7 +17,7 @@ Future<void> initNotifications() async {
         const AndroidNotificationChannel(
           _channelId,
           _channelName,
-          description: 'New OpenDash and Companion releases',
+          description: 'New S1 Dash and Companion releases',
           importance: Importance.defaultImportance,
         ),
       );

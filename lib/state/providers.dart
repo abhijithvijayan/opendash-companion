@@ -272,7 +272,7 @@ final actionsEnabledProvider = Provider<bool>((ref) {
 /// One line for the app's log: what the scooter looked like.
 String describeStatus(ScooterStatus s) {
   if (!s.isOlaHeadUnit) return 'status: not an Ola head unit';
-  final od = s.openDashInstalled ? 'OpenDash ${s.openDashVersion} (build ${s.openDashBuild})' : 'OpenDash not installed';
+  final od = s.openDashInstalled ? 'S1 Dash ${s.openDashVersion} (build ${s.openDashBuild})' : 'S1 Dash not installed';
   return 'status: $od, home ${s.openDashIsHome ? 'OpenDash' : 'stock'}, density ${s.density}, '
       '${s.otherApps.where((a) => !a.isOpenDash).length} other apps';
 }

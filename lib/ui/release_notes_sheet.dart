@@ -3,7 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../releases/notes.dart';
 import '../releases/release.dart';
 
-Future<void> showReleaseNotes(BuildContext context, Release r, {String name = 'OpenDash'}) => showModalBottomSheet<void>(
+Future<void> showReleaseNotes(BuildContext context, Release r, {String name = 'S1 Dash'}) => showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,

@@ -25,7 +25,7 @@ class OpenDashUpdateNotice extends ConsumerWidget {
       padding: const EdgeInsets.only(top: 16),
       child: Notice(
         icon: Icons.system_update_rounded,
-        title: 'OpenDash ${r.version} is out',
+        title: 'S1 Dash ${r.version} is out',
         body: onUpdate == null
             ? 'Connect to your scooter to update.${r.published.isEmpty ? '' : ' Released ${r.published}.'}'
             : r.published.isEmpty
@@ -59,7 +59,7 @@ class CompanionUpdateNotice extends ConsumerWidget {
         title: 'This app has an update: ${r.version}',
         actions: [
           TextButton(onPressed: () => ref.read(skippedCompanionProvider.notifier).skip(r.build), child: const Text('Skip')),
-          TextButton(onPressed: () => showReleaseNotes(context, r, name: 'OpenDash Companion'), child: const Text("What's new")),
+          TextButton(onPressed: () => showReleaseNotes(context, r, name: 'S1 Dash Companion'), child: const Text("What's new")),
           FilledButton(
               style: FilledButton.styleFrom(minimumSize: const Size(0, 40)), onPressed: () => updateCompanion(context, ref, r), child: const Text('Update')),
         ],

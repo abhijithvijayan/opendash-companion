@@ -15,7 +15,7 @@ import 'widgets.dart';
 
 final hostApiProvider = Provider<AdbHostApi>((ref) => AdbHostApi());
 
-const _uninstallNote = 'OpenDash turned off the stock dashboard\'s update auto-download. Use OpenDash\'s '
+const _uninstallNote = 'S1 Dash turned off the stock dashboard\'s update auto-download. Use S1 Dash\'s '
     '"Restore stock update settings" first, or turn it on later in the stock dashboard.';
 
 Future<void> _run(BuildContext context, WidgetRef ref, Operation op) {
@@ -26,7 +26,7 @@ Future<void> _run(BuildContext context, WidgetRef ref, Operation op) {
 
 Future<void> installFromGitHub(BuildContext context, WidgetRef ref, Release r, {required bool update}) async {
   final ok = await confirm(context,
-      title: update ? 'Update to OpenDash ${r.version}?' : 'Install OpenDash ${r.version}?', body: kParkedWarning, confirm: update ? 'Update' : 'Install');
+      title: update ? 'Update to S1 Dash ${r.version}?' : 'Install S1 Dash ${r.version}?', body: kParkedWarning, confirm: update ? 'Update' : 'Install');
   if (!ok || !context.mounted) return;
   _run(
       context,
@@ -91,7 +91,7 @@ Future<bool> _installPicked(BuildContext context, WidgetRef ref, String path) as
     case Unofficial():
       final go = await confirm(context,
           title: 'Not an official build',
-          body: "This APK is not signed with OpenDash's release key. Install it only if you built it yourself.",
+          body: "This APK is not signed with S1 Dash's release key. Install it only if you built it yourself.",
           confirm: 'Install anyway',
           danger: true);
       if (!go || !context.mounted) return false;
@@ -99,14 +99,14 @@ Future<bool> _installPicked(BuildContext context, WidgetRef ref, String path) as
       break;
   }
   if (!context.mounted) return false;
-  final ok = await confirm(context, title: 'Install this OpenDash build?', body: kParkedWarning, confirm: 'Install');
+  final ok = await confirm(context, title: 'Install this S1 Dash build?', body: kParkedWarning, confirm: 'Install');
   if (!ok || !context.mounted) return false;
   _run(context, ref, installOps(ref.read(adbProvider), path, makeHome: ref.read(prefsProvider).makeHome, cleanup: _clearPicked));
   return true;
 }
 
 Future<void> launchOpenDash(BuildContext context, WidgetRef ref, {required bool viaHome}) async {
-  final ok = await confirm(context, title: 'Start OpenDash?', body: kParkedWarning, confirm: 'Start');
+  final ok = await confirm(context, title: 'Start S1 Dash?', body: kParkedWarning, confirm: 'Start');
   if (!ok || !context.mounted) return;
   _run(context, ref, launchOps(ref.read(adbProvider), viaHome: viaHome));
 }
@@ -121,7 +121,7 @@ Future<void> launchStockDash(BuildContext context, WidgetRef ref, {required bool
 
 /// Force-stop + relaunch (launchOps does a fresh-Surface start), to recover a crashed or white-screened dashboard.
 Future<void> restartOpenDash(BuildContext context, WidgetRef ref, {required bool viaHome}) async {
-  final ok = await confirm(context, title: 'Restart OpenDash?', body: kParkedWarning, confirm: 'Restart');
+  final ok = await confirm(context, title: 'Restart S1 Dash?', body: kParkedWarning, confirm: 'Restart');
   if (!ok || !context.mounted) return;
   _run(context, ref, launchOps(ref.read(adbProvider), viaHome: viaHome));
 }
@@ -133,7 +133,7 @@ Future<void> forgetPriorModeIfUninstalled(Operation op, Prefs prefs, String? key
 
 Future<void> uninstallOpenDash(BuildContext context, WidgetRef ref) async {
   final ok = await confirm(context,
-      title: 'Uninstall OpenDash?',
+      title: 'Uninstall S1 Dash?',
       body: '$kParkedWarning\n\nThe stock dashboard becomes the home screen again.\n\n$_uninstallNote',
       confirm: 'Uninstall',
       danger: true);

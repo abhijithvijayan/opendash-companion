@@ -87,7 +87,7 @@ class _CompanionAppState extends ConsumerState<CompanionApp> with WidgetsBinding
     final accepted = ref.watch(ackProvider);
     ref.listen(autoSendProvider, (_, _) {});
     return MaterialApp(
-      title: 'OpenDash Companion',
+      title: 'S1 Dash Companion',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
       darkTheme: darkTheme,

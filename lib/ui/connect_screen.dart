@@ -108,7 +108,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('OpenDash Companion'),
+        title: const Text('S1 Dash Companion'),
         actions: [
           IconButton(
             tooltip: 'About',
@@ -171,7 +171,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
                     ListTile(
                       leading: Icon(Icons.history_rounded, color: cs.onSurfaceVariant),
                       title: Text(r.host),
-                      subtitle: Text(switch (r.build) { null => 'Not connected yet', 0 => 'No OpenDash', final b => 'OpenDash build $b' }),
+                      subtitle: Text(switch (r.build) { null => 'Not connected yet', 0 => 'No S1 Dash', final b => 'S1 Dash build $b' }),
                       trailing: IconButton(
                         tooltip: 'Forget',
                         icon: const Icon(Icons.close_rounded),

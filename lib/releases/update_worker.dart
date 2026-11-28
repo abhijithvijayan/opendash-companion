@@ -26,7 +26,7 @@ Future<bool> runUpdateCheck({
       lastNotifiedBuild: prefs.lastNotifiedOpenDash,
     );
     if (odNotice != null) {
-      await notify('OpenDash ${odNotice.version} is available', 'Open the companion to update your scooter.');
+      await notify('S1 Dash ${odNotice.version} is available', 'Open the companion to update your scooter.');
       await prefs.setLastNotifiedOpenDash(odNotice.build);
     }
 
@@ -41,7 +41,7 @@ Future<bool> runUpdateCheck({
       lastNotifiedBuild: prefs.lastNotifiedCompanion,
     );
     if (coNotice != null) {
-      await notify('OpenDash Companion ${coNotice.version} is available', 'Open the companion to update it.');
+      await notify('S1 Dash Companion ${coNotice.version} is available', 'Open the companion to update it.');
       await prefs.setLastNotifiedCompanion(coNotice.build);
     }
     return true;
