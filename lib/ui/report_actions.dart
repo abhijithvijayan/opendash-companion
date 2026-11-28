@@ -37,7 +37,7 @@ Future<void> reportProblem(BuildContext context, WidgetRef ref) async {
           ListTile(
             key: const ValueKey('report-opendash'),
             leading: const Icon(Icons.speed_rounded),
-            title: const Text('Something wrong with OpenDash'),
+            title: const Text('Something wrong with S1 Dash'),
             subtitle: const Text('On the dashboard itself'),
             onTap: () => Navigator.pop(c, kOpenDashRepo),
           ),
@@ -133,7 +133,7 @@ Future<Set<LogKind>?> chooseLogs(BuildContext context, {required int appLogBytes
                   child: Text('Which logs?', style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
                 ),
                 option(LogKind.companion, "This app's log", 'Connections and every install step'),
-                option(LogKind.openDash, "OpenDash's log", 'What happened on the dashboard'),
+                option(LogKind.openDash, "S1 Dash's log", 'What happened on the dashboard'),
                 option(
                   LogKind.canBus,
                   'CAN bus recordings',
@@ -142,7 +142,7 @@ Future<Set<LogKind>?> chooseLogs(BuildContext context, {required int appLogBytes
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
                   child: Text(
-                    'OpenDash masks the VIN, serial numbers, phone and network names before writing its logs. '
+                    'S1 Dash masks the VIN, serial numbers, phone and network names before writing its logs. '
                     'Read them before you post them publicly. The zip is smaller than the sizes shown.',
                     style: muted,
                   ),
@@ -181,7 +181,7 @@ Future<void> shareLogs(BuildContext context, WidgetRef ref) async {
     try {
       remote = await listScooterLogs(adb);
     } on AdbFailure catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text("Couldn't list OpenDash's logs (${e.message}); sharing this app's log only.")));
+      messenger.showSnackBar(SnackBar(content: Text("Couldn't list S1 Dash's logs (${e.message}); sharing this app's log only.")));
     } finally {
       busy.close();
     }
@@ -204,7 +204,7 @@ Future<void> shareLogs(BuildContext context, WidgetRef ref) async {
       adb: remote.isEmpty ? null : adb,
       remote: remote,
       kinds: kinds,
-      summary: ['OpenDash Companion: ${versionLabel()}', if (status != null) describeStatus(status)].join('\n'),
+      summary: ['S1 Dash Companion: ${versionLabel()}', if (status != null) describeStatus(status)].join('\n'),
       onProgress: (done, total) {
         if (total > 0) busy.label.value = 'Collecting logs… $done of $total';
       },
@@ -221,7 +221,7 @@ Future<void> shareLogs(BuildContext context, WidgetRef ref) async {
     );
   }
   try {
-    await ref.read(hostApiProvider).shareFile(bundle.zip.path, 'application/zip', 'OpenDash logs');
+    await ref.read(hostApiProvider).shareFile(bundle.zip.path, 'application/zip', 'S1 Dash logs');
   } catch (e) {
     messenger.showSnackBar(SnackBar(content: Text("Couldn't open the share sheet: $e")));
   }
@@ -242,7 +242,7 @@ class ProblemSection extends ConsumerWidget {
       children: [
         const SectionLabel('Something wrong?'),
         Text(
-          "Share logs lets you pick this app's log, OpenDash's log and the CAN bus recordings, and puts them in one zip "
+          "Share logs lets you pick this app's log, S1 Dash's log and the CAN bus recordings, and puts them in one zip "
           'to attach to a report.',
           style: t.textTheme.bodyMedium?.copyWith(color: t.colorScheme.onSurfaceVariant),
         ),

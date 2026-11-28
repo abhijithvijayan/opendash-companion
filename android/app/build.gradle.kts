@@ -23,7 +23,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "in.abhijithvijayan.opendash.companion"
+        applicationId = "io.github.nivas001.s1dash.companion"
         minSdk = 29
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

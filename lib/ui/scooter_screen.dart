@@ -149,12 +149,12 @@ class _Body extends ConsumerWidget {
                 padding: EdgeInsets.only(top: 16),
                 child: Notice(
                     icon: Icons.inventory_2_outlined,
-                    title: 'No OpenDash release found',
+                    title: 'No S1 Dash release found',
                     body: 'GitHub has no published release yet. You can still install from a file.'),
               ),
             _ => const SizedBox.shrink(),
           },
-          const SectionLabel('OpenDash'),
+          const SectionLabel('S1 Dash'),
           // When the stock dash is the home app (always so when OpenDash isn't
           // installed), offer to relaunch it — the fix for a white screen after
           // a restart. The HOME intent gives it a fresh Surface.
@@ -170,7 +170,7 @@ class _Body extends ConsumerWidget {
             FilledButton.icon(
               onPressed: enabled ? () => installFromGitHub(context, ref, latest, update: false) : null,
               icon: const Icon(Icons.download_rounded),
-              label: Text('Install OpenDash ${latest.version}'),
+              label: Text('Install S1 Dash ${latest.version}'),
             ),
             const SizedBox(height: 10),
           ],
@@ -178,7 +178,7 @@ class _Body extends ConsumerWidget {
             if (status.stagedBuild == latest.build) ...[
               Notice(
                 icon: Icons.mark_email_read_outlined,
-                title: 'OpenDash ${latest.version} is waiting on the dashboard',
+                title: 'S1 Dash ${latest.version} is waiting on the dashboard',
                 body: 'It was sent to the scooter. Install it there, from Settings, Updates, or update now from here.',
               ),
               const SizedBox(height: 10),
@@ -206,13 +206,13 @@ class _Body extends ConsumerWidget {
             FilledButton.icon(
               onPressed: enabled ? () => launchOpenDash(context, ref, viaHome: status.openDashIsHome) : null,
               icon: const Icon(Icons.play_arrow_rounded),
-              label: const Text('Start OpenDash'),
+              label: const Text('Start S1 Dash'),
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: enabled ? () => restartOpenDash(context, ref, viaHome: status.openDashIsHome) : null,
               icon: const Icon(Icons.restart_alt_rounded),
-              label: const Text('Restart OpenDash'),
+              label: const Text('Restart S1 Dash'),
             ),
             const SizedBox(height: 10),
             if (latest != null && latest.build <= status.openDashBuild!) ...[
@@ -240,7 +240,7 @@ class _Body extends ConsumerWidget {
             child: SwitchListTile(
               value: ref.watch(makeHomeProvider),
               onChanged: (v) => ref.read(makeHomeProvider.notifier).set(v),
-              title: const Text('Make OpenDash the home screen'),
+              title: const Text('Make S1 Dash the home screen'),
               subtitle: const Text('When installing or updating'),
             ),
           ),
@@ -250,7 +250,7 @@ class _Body extends ConsumerWidget {
               style: OutlinedButton.styleFrom(foregroundColor: cs.error, side: BorderSide(color: cs.error.withValues(alpha: 0.5))),
               onPressed: enabled ? () => uninstallOpenDash(context, ref) : null,
               icon: const Icon(Icons.delete_outline_rounded),
-              label: const Text('Uninstall OpenDash'),
+              label: const Text('Uninstall S1 Dash'),
             ),
           ],
           const SectionLabel('Other apps on the scooter'),
@@ -346,7 +346,7 @@ class _StatusCard extends StatelessWidget {
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(installed ? 'OpenDash ${status.openDashVersion ?? ''}' : "OpenDash isn't installed",
+                Text(installed ? 'S1 Dash ${status.openDashVersion ?? ''}' : "S1 Dash isn't installed",
                     style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                 Text(installed ? 'Build ${status.openDashBuild}' : 'The stock dashboard is running',
                     style: t.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
@@ -356,7 +356,7 @@ class _StatusCard extends StatelessWidget {
           const SizedBox(height: 12),
           const Divider(),
           const SizedBox(height: 4),
-          InfoRow('Home screen', status.openDashIsHome ? 'OpenDash' : 'Stock dashboard'),
+          InfoRow('Home screen', status.openDashIsHome ? 'S1 Dash' : 'Stock dashboard'),
           InfoRow('Display density', status.density == null ? '—' : '${status.density} dpi'),
           InfoRow('Latest release', latest?.version ?? '—'),
         ]),

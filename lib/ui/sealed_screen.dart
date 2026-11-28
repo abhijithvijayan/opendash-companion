@@ -23,11 +23,11 @@ class SealedScreen extends ConsumerWidget {
             title: "$host can't be set up from here",
             body:
                 "This scooter's diagnostics service doesn't allow this phone to be set up over the network, "
-                'so OpenDash Companion cannot grant itself access.',
+                'so S1 Dash Companion cannot grant itself access.',
           ),
           const SizedBox(height: 16),
           Text(
-            'OpenDash has to be side-loaded onto this scooter instead. The OpenDash README describes how, under "Before You Install".',
+            'S1 Dash has to be side-loaded onto this scooter instead. The S1 Dash README describes how, under "Before You Install".',
             style: t.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

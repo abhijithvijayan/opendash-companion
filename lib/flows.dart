@@ -79,7 +79,7 @@ Future<void> clearDownloads(Directory dir) async {
 Operation githubInstallOps(Adb adb, http.Client client, Release r, Directory dir,
     {required Inspect inspect, required bool makeHome, Duration idleTimeout = const Duration(seconds: 30)}) {
   late String path;
-  return Operation('Installing OpenDash ${r.version}', [
+  return Operation('Installing S1 Dash ${r.version}', [
     _download(client, r, dir, (p) => path = p, idleTimeout),
     _verify(r, () => path, inspect, kOpenDashCertSha256, kOpenDashPackage),
     ...installSteps(adb, () => path, makeHome: makeHome),
@@ -97,7 +97,7 @@ Operation sendToScooterOps(Adb adb, http.Client client, Release r, Directory dir
     {required Inspect inspect, required bool manual, Duration idleTimeout = const Duration(seconds: 30)}) {
   late String path;
   const inbox = '$kOpenDashInbox/incoming';
-  return Operation('Sending OpenDash ${r.version} to the scooter', [
+  return Operation('Sending S1 Dash ${r.version} to the scooter', [
     _download(client, r, dir, (p) => path = p, idleTimeout),
     _verify(r, () => path, inspect, kOpenDashCertSha256, kOpenDashPackage),
     (

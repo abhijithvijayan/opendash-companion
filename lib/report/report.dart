@@ -10,8 +10,8 @@ import 'app_log.dart';
 /// the rider, the phone or the scooter; the rider writes the rest.
 String issueUrl(String repo, {required String companion, String? openDash, int? openDashBuild}) {
   final lines = [
-    'OpenDash Companion: $companion',
-    if (openDash != null) 'OpenDash: $openDash${openDashBuild == null ? '' : ' (build $openDashBuild)'}',
+    'S1 Dash Companion: $companion',
+    if (openDash != null) 'S1 Dash: $openDash${openDashBuild == null ? '' : ' (build $openDashBuild)'}',
   ];
   return 'https://github.com/$repo/issues/new?body=${Uri.encodeComponent('${lines.join('\n')}\n\nWhat happened:\n')}';
 }

@@ -38,11 +38,11 @@ class AboutScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          Text('OpenDash Companion', style: t.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+          Text('S1 Dash Companion', style: t.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 4),
           Text(versionLabel(), key: const ValueKey('about-version'), style: muted),
           const SizedBox(height: 12),
-          Text('Installs, updates and removes OpenDash on an Ola S1 scooter, from your phone.', style: t.textTheme.bodyLarge),
+          Text('Installs, updates and removes S1 Dash on an Ola S1 scooter, from your phone.', style: t.textTheme.bodyLarge),
           const SizedBox(height: 20),
           const Notice(
             icon: Icons.shield_outlined,
@@ -79,20 +79,20 @@ class AboutScreen extends ConsumerWidget {
                   key: const ValueKey('about-share-logs'),
                   leading: const Icon(Icons.ios_share_rounded),
                   title: const Text('Share logs'),
-                  subtitle: const Text("This app's log, and OpenDash's when connected"),
+                  subtitle: const Text("This app's log, and S1 Dash's when connected"),
                   onTap: () => shareLogs(context, ref),
                 ),
               ],
             ),
           ),
-          const SectionLabel('OpenDash'),
+          const SectionLabel('S1 Dash'),
           Card(
             clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
                 link(
                   Icons.speed_rounded,
-                  'OpenDash',
+                  'S1 Dash',
                   'The dashboard this app installs',
                   'https://github.com/$kOpenDashRepo',
                   key: const ValueKey('about-opendash'),
@@ -100,7 +100,7 @@ class AboutScreen extends ConsumerWidget {
                 const Divider(indent: 56),
                 link(
                   Icons.bug_report_outlined,
-                  'Report a problem with OpenDash',
+                  'Report a problem with S1 Dash',
                   'Something wrong on the dashboard itself',
                   'https://github.com/$kOpenDashRepo/issues',
                   key: const ValueKey('about-issues-opendash'),
@@ -146,7 +146,7 @@ class AboutScreen extends ConsumerWidget {
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => showLicensePage(
                     context: context,
-                    applicationName: 'OpenDash Companion',
+                    applicationName: 'S1 Dash Companion',
                     applicationVersion: versionLabel(),
                     applicationLegalese: 'Copyright © Abhijith Vijayan. Free software under the GNU GPL, version 3 or later.',
                   ),

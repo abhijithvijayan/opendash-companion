@@ -61,7 +61,7 @@ class ManualKeyScreen extends ConsumerWidget {
           ),
           if (!conn.busy && conn.outcome == ConnectOutcome.unauthorized) ...[
             const SizedBox(height: 16),
-            Text('Getting adb access to a scooter for the first time is described in the OpenDash README, under "Before You Install".',
+            Text('Getting adb access to a scooter for the first time is described in the S1 Dash README, under "Before You Install".',
                 style: t.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
           ],
         ],

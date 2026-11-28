@@ -1,33 +1,10 @@
-<p align="center">
-  <img src="assets/icon.svg" width="96" height="96" alt="OpenDash Companion icon" />
-</p>
-<h1 align="center">OpenDash Companion</h1>
-<p align="center">Install, update and remove OpenDash on an Ola S1 scooter from your phone</p>
-<div align="center">
-  <a href="https://github.com/abhijithvijayan/opendash-companion/blob/main/license">
-    <img src="https://img.shields.io/github/license/abhijithvijayan/opendash-companion.svg" alt="LICENSE" />
-  </a>
-  <a href="https://github.com/abhijithvijayan/opendash-companion/releases/latest">
-    <img src="https://img.shields.io/github/v/release/abhijithvijayan/opendash-companion.svg" alt="RELEASE" />
-  </a>
-  <a href="https://github.com/abhijithvijayan/opendash-companion/actions/workflows/ci.yml">
-    <img src="https://github.com/abhijithvijayan/opendash-companion/actions/workflows/ci.yml/badge.svg" alt="CI" />
-  </a>
-  <a href="https://twitter.com/intent/tweet?text=Check%20out%20OpenDash%20Companion%21%20by%20%40_abhijithv%0A%0AInstall%20OpenDash%20on%20your%20Ola%20S1%20from%20your%20phone%0Ahttps%3A%2F%2Fgithub.com%2Fabhijithvijayan%2Fopendash-companion%0A%0A%23OlaS1Pro%20%23EV%20%23Flutter">
-     <img src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social" alt="TWEET" />
-  </a>
-</div>
-<h3 align="center">Made by <a href="https://twitter.com/_abhijithv">@abhijithvijayan</a></h3>
-<p align="center">
-  Donate:
-  <a href="https://www.paypal.me/iamabhijithvijayan" target='_blank'><i><b>PayPal</b></i></a>,
-  <a href="https://www.patreon.com/abhijithvijayan" target='_blank'><i><b>Patreon</b></i></a>
-</p>
-<p align="center">
-  <a href='https://www.buymeacoffee.com/abhijithvijayan' target='_blank'>
-    <img height='36' style='border:0px;height:36px;' src='https://bmc-cdn.nyc3.digitaloceanspaces.com/BMC-button-images/custom_images/orange_img.png' border='0' alt='Buy Me a Coffee' />
-  </a>
-</p>
+<h1 align="center">S1 Dash Companion</h1>
+<p align="center">Install, update and remove <a href="https://github.com/Nivas001/s1-dash">S1 Dash</a> on an Ola S1 scooter from your phone</p>
+
+> **S1 Dash Companion is a fork of [OpenDash Companion](https://github.com/abhijithvijayan/opendash-companion) by Abhijith Vijayan**, changed to install [S1 Dash](https://github.com/Nivas001/s1-dash) (package `io.github.nivas001.s1dash`) instead of OpenDash. It is not an official OpenDash release and is not made, endorsed or supported by Ola Electric. Everything below describes OpenDash Companion; read "OpenDash" as "S1 Dash".
+>
+> **Until S1 Dash has a release key, every S1 Dash APK counts as unofficial**: the app shows a warning and asks before installing it. Use **Install from a file** with an APK you built yourself or got from this repository's releases.
+
 <hr />
 
 <p align="center">

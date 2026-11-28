@@ -149,7 +149,7 @@ StepAction _launch(Adb adb, {required String package, required String activity, 
     };
 
 Operation installOps(Adb adb, String apkPath, {required bool makeHome, Future<void> Function()? cleanup}) =>
-    Operation('Installing OpenDash', installSteps(adb, () => apkPath, makeHome: makeHome), cleanup: cleanup);
+    Operation('Installing S1 Dash', installSteps(adb, () => apkPath, makeHome: makeHome), cleanup: cleanup);
 
 /// The install steps, reading the APK's path only when the install starts
 /// (a download step before them supplies it).
@@ -161,9 +161,9 @@ List<(OpStep, StepAction)> installSteps(Adb adb, String Function() apkPath, {req
       // density) only blew up every other app and Android's own screens.
       (OpStep('screensaver', 'Turn off the screensaver'),
           _soft(adb, 'settings put secure screensaver_enabled 0', "Couldn't turn off the screensaver.")),
-      (OpStep('stop', 'Stop OpenDash'), shellStep(adb, 'am force-stop $kOpenDashPackage')),
+      (OpStep('stop', 'Stop S1 Dash'), shellStep(adb, 'am force-stop $kOpenDashPackage')),
       (
-        OpStep('install', 'Install OpenDash'),
+        OpStep('install', 'Install S1 Dash'),
         (step, changed) => adb.install(apkPath(), const ['-r', '-g'], onProgress: (sent, total) {
               step.progress = total == 0 ? null : sent / total;
               changed();
@@ -171,16 +171,16 @@ List<(OpStep, StepAction)> installSteps(Adb adb, String Function() apkPath, {req
       ),
       if (makeHome)
         (
-          OpStep('home', 'Make OpenDash the home screen'),
+          OpStep('home', 'Make S1 Dash the home screen'),
           _soft(adb, 'cmd package set-home-activity $kOpenDashActivity',
-              "Couldn't make it the home screen. Pick OpenDash when the scooter asks which home app to use.")
+              "Couldn't make it the home screen. Pick S1 Dash when the scooter asks which home app to use.")
         ),
-      (OpStep('launch', 'Start OpenDash'), _launch(adb, package: kOpenDashPackage, activity: kOpenDashActivity, viaHome: makeHome)),
+      (OpStep('launch', 'Start S1 Dash'), _launch(adb, package: kOpenDashPackage, activity: kOpenDashActivity, viaHome: makeHome)),
     ];
 
 Operation launchOps(Adb adb, {required bool viaHome}) =>
-    Operation('Starting OpenDash', [
-      (OpStep('launch', 'Start OpenDash'), _launch(adb, package: kOpenDashPackage, activity: kOpenDashActivity, viaHome: viaHome))
+    Operation('Starting S1 Dash', [
+      (OpStep('launch', 'Start S1 Dash'), _launch(adb, package: kOpenDashPackage, activity: kOpenDashActivity, viaHome: viaHome))
     ]);
 
 /// Brings the stock Ola dashboard back — the recovery for a white screen after
@@ -205,14 +205,14 @@ StepAction _restoreMode(Adb adb, String host, String mode) => (step, changed) as
       } catch (_) {}
     };
 
-Operation uninstallOps(Adb adb, {String? host, String? priorMode}) => Operation('Removing OpenDash', [
+Operation uninstallOps(Adb adb, {String? host, String? priorMode}) => Operation('Removing S1 Dash', [
       (
         OpStep('home', 'Give the home screen back to the stock dashboard'),
         _soft(adb, 'cmd package set-home-activity $kStockActivity',
             "Couldn't set the stock dashboard as home. Pick it when the scooter asks which home app to use.")
       ),
       (OpStep('stock', 'Start the stock dashboard'), _soft(adb, 'am start -W -n $kStockActivity', "Couldn't start the stock dashboard; it starts on the next boot.")),
-      (OpStep('uninstall', 'Uninstall OpenDash'), _pmUninstall(adb, kOpenDashPackage)),
+      (OpStep('uninstall', 'Uninstall S1 Dash'), _pmUninstall(adb, kOpenDashPackage)),
       if (host != null && priorMode != null && priorMode != 'mfg')
         (OpStep('mode', "Restore the scooter's previous mode"), _restoreMode(adb, host, priorMode)),
     ]);
